@@ -218,10 +218,6 @@ public class Applet extends JPanel implements PConstants, Runnable {
     }
 
     public void size(int width, int height) {
-        // Dimension displaySize = Toolkit.getDefaultToolkit().getScreenSize();
-        // displayWidth = (int) displaySize.getWidth();
-        // displayHeight = (int) displaySize.getHeight();
-
         GraphicsDevice device = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
         DisplayMode displayMode = device.getDisplayMode();
         displayWidth = displayMode.getWidth();
@@ -314,13 +310,22 @@ public class Applet extends JPanel implements PConstants, Runnable {
 
         // frame.setVisible(true);
     }
-    
+
     public double getWindowScale() {
         try {
             return getGraphicsConfiguration().getDefaultTransform().getScaleX();
         } catch (Exception e) {
             return 1;
         }
+    }
+
+    public PVector getTrueScreenSize() {
+        return new PVector(displayWidth, displayHeight);
+    }
+
+    public PVector getScaledScreenSize() {
+        Dimension size = Toolkit.getDefaultToolkit().getScreenSize();
+        return new PVector(size.getWidth(), size.getHeight());
     }
 
     public JFrame getFrame() {
@@ -525,11 +530,11 @@ public class Applet extends JPanel implements PConstants, Runnable {
 
         mouseDragged();
         for (int i = 0; i < PComponent.components.size(); i++) {
-        PComponent.components.get(i).mouseDragged();
+            PComponent.components.get(i).mouseDragged();
         }
         // Iterator<PComponent> itr = PComponent.components.iterator();
         // while (itr.hasNext()) {
-        //     itr.next().mouseDragged();
+        // itr.next().mouseDragged();
         // }
     }
 
@@ -640,7 +645,7 @@ public class Applet extends JPanel implements PConstants, Runnable {
         }
         // Iterator<PComponent> itr = PComponent.components.iterator();
         // while (itr.hasNext()) {
-        //     itr.next().keyReleased();
+        // itr.next().keyReleased();
         // }
     }
 
