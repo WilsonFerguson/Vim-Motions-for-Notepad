@@ -295,25 +295,25 @@ class Editor extends PComponent {
             case 'G':
                 cursor.y = content.size() - 1;
                 cursor.x = cursor.getEndOfLine();
-                // case 's':
-                // cursor.deleteCurrentCharacter();
-                // mode = Mode.INSERT;
-                // return true;
-                // case 'p':
-                // cursor.pasteAfter();
-                // return true;
-                // case 'P':
-                // cursor.pasteBefore();
-                // return true;
-                // case 'x':
-                // cursor.deleteCurrentCharacter();
-                // return true;
-                // case 'o':
-                // // TODO - implement
-                // return true;
-                // case 'O':
-                // // TODO - implement
-                // return true;
+            case 's':
+                cursor.deleteCurrentCharacter();
+                mode = Mode.INSERT;
+                return true;
+            // case 'p':
+            // cursor.pasteAfter();
+            // return true;
+            // case 'P':
+            // cursor.pasteBefore();
+            // return true;
+            case 'x':
+                cursor.deleteCurrentCharacter();
+                return true;
+            // case 'o':
+            // // TODO - implement
+            // return true;
+            // case 'O':
+            // // TODO - implement
+            // return true;
         }
 
         return false;

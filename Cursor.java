@@ -227,6 +227,14 @@ public class Cursor extends PComponent implements EventIgnorer {
             x += findFirstNonWhitespace(content.get(y).substring(x));
     }
 
+    public void deleteCurrentCharacter() {
+        if (!onCharacter())
+            return;
+
+        String line = content.get(y);
+        content.set(y, line.substring(0, x) + line.substring(x + 1));
+    }
+
     private int findLastNonWhitespace(String line) {
         for (int i = line.length() - 1; i >= 0; i--)
             if (!Character.isWhitespace(line.charAt(i)))
@@ -265,6 +273,15 @@ public class Cursor extends PComponent implements EventIgnorer {
 
     public int getEndOfLine() {
         return max(content.get(y).length() - 1, 0);
+    }
+
+    private boolean onCharacter() {
+        try {
+            content.get(y).charAt(x);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private PVector getTextPosition(int x, int y) {
