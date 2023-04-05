@@ -70,7 +70,6 @@ public class Applet extends JPanel implements PConstants, Runnable {
     public int displayWidth;
     public int displayHeight;
     private double universalScale = 1;
-    public int pixelDensity = 1;
 
     // Input States
     public boolean mousePressed = false;
@@ -223,8 +222,7 @@ public class Applet extends JPanel implements PConstants, Runnable {
         // displayWidth = (int) displaySize.getWidth();
         // displayHeight = (int) displaySize.getHeight();
 
-        GraphicsDevice device =
-        GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+        GraphicsDevice device = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
         DisplayMode displayMode = device.getDisplayMode();
         displayWidth = displayMode.getWidth();
         displayHeight = displayMode.getHeight();
@@ -235,12 +233,6 @@ public class Applet extends JPanel implements PConstants, Runnable {
         PComponent.height = height;
         PComponent.displayWidth = displayWidth;
         PComponent.displayHeight = displayHeight;
-
-        // Get pixel density
-        try {
-            pixelDensity = (int) getGraphicsConfiguration().getDefaultTransform().getScaleX();
-        } catch (Exception e) {
-        }
 
         universalScale = 1;
 
@@ -321,6 +313,14 @@ public class Applet extends JPanel implements PConstants, Runnable {
         smooth();
 
         // frame.setVisible(true);
+    }
+    
+    public double getWindowScale() {
+        try {
+            return getGraphicsConfiguration().getDefaultTransform().getScaleX();
+        } catch (Exception e) {
+            return 1;
+        }
     }
 
     public JFrame getFrame() {
