@@ -11,6 +11,8 @@ class Sketch extends Applet {
         size((int) screenSize.x / 2, (int) screenSize.y / 2);
         setResizable(true);
 
+        // TODO try scrolling up and down and it's a little buggy
+
         setTitle("Vim Motions for Notepad");
         exitOnEscape(false);
 

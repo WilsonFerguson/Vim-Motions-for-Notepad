@@ -232,9 +232,41 @@ class Editor extends PComponent {
         return false;
     }
 
+    private boolean parseCommandColon(String motion) {
+        switch (motion) {
+            case "w":
+            case "wq":
+            case "q":
+            case "q!":
+            case "E":
+        }
+    }
+
+    private boolean parseCommandStar(String motion) {
+        // TODO - implement
+        // Simply a redirection to select the current word and then slash it
+        return true;
+    }
+
+    private boolean parseCommandSlash(String motion) {
+        // TODO - implement
+    }
+
     // :, *, /, etc.
     private boolean parseCommand() {
-        // TODO - implement
+        String motion = this.motion;
+        char command = motion.charAt(0);
+        motion = motion.substring(1);
+
+        switch (command) {
+            case ':':
+                return parseCommandColon(motion);
+            case '*':
+                return parseCommandStar(motion);
+            case '/':
+                return parseCommandSlash(motion);
+        }
+
         return false;
     }
 
