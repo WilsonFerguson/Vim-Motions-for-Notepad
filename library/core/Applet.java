@@ -209,6 +209,12 @@ public class Applet extends JPanel implements PConstants, Runnable {
         addMouseWheelListener(mouseHandler);
         frame.addWindowListener(windowHandler);
 
+        frame.addComponentListener(new ComponentAdapter() {
+            public void componentResized(ComponentEvent componentEvent) {
+                windowResize();
+            }
+        });
+
         // Set icon
         ArrayList<Image> icons = new ArrayList<Image>();
         icons.add(new ImageIcon("icon.png").getImage());
@@ -326,6 +332,10 @@ public class Applet extends JPanel implements PConstants, Runnable {
     public PVector getScaledScreenSize() {
         Dimension size = Toolkit.getDefaultToolkit().getScreenSize();
         return new PVector(size.getWidth(), size.getHeight());
+    }
+
+    public void setResizable(boolean resizable) {
+        frame.setResizable(resizable);
     }
 
     public JFrame getFrame() {
@@ -699,6 +709,28 @@ public class Applet extends JPanel implements PConstants, Runnable {
     }
 
     protected void windowDeactivated() {
+
+    }
+
+    protected void windowResize() {
+        if (!fullScreen) {
+            width = frame.getWidth();
+            height = frame.getHeight();
+            setPreferredSize(new Dimension(width, height));
+            img = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+            g2d = img.createGraphics();
+            g2d.scale(universalScale, universalScale);
+            pixels = new color[width * height];
+            smooth();
+        }
+
+        windowResized();
+        for (int i = 0; i < PComponent.components.size(); i++) {
+            PComponent.components.get(i).windowResized();
+        }
+    }
+
+    protected void windowResized() {
 
     }
 

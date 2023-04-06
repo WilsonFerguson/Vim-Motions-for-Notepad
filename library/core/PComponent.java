@@ -127,6 +127,10 @@ public class PComponent extends PFunctions {
 
     }
 
+    protected void windowResized() {
+
+    }
+
     public void smooth() {
         applet.smooth();
     }
