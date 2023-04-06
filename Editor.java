@@ -308,12 +308,14 @@ class Editor extends PComponent {
             case 'x':
                 cursor.deleteCurrentCharacter();
                 return true;
-            // case 'o':
-            // // TODO - implement
-            // return true;
-            // case 'O':
-            // // TODO - implement
-            // return true;
+            case 'o':
+                cursor.newLineBelow();
+                mode = Mode.INSERT;
+                return true;
+            case 'O':
+                cursor.newLineAbove();
+                mode = Mode.INSERT;
+                return true;
         }
 
         return false;
@@ -555,8 +557,19 @@ class Editor extends PComponent {
         // TODO - handle horizontal scrolling
     }
 
+    private void sortCursors() {
+        // Sort cursors from bottom to top
+        Collections.sort(cursors, new Comparator<Cursor>() {
+            @Override
+            public int compare(Cursor c1, Cursor c2) {
+                return c1.y - c2.y;
+            }
+        });
+    }
+
     public void draw() {
         updateViewportOffset();
+        sortCursors();
         translate(viewportOffset);
 
         background(backgroundColor);
