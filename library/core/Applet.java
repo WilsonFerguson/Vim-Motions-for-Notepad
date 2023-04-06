@@ -725,6 +725,9 @@ public class Applet extends JPanel implements PConstants, Runnable {
         if (!fullScreen) {
             width = frame.getWidth();
             height = frame.getHeight();
+            PComponent.width = width;
+            PComponent.height = height;
+
             setPreferredSize(new Dimension(width, height));
             img = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
             g2d = img.createGraphics();

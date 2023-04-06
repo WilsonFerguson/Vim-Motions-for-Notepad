@@ -9,7 +9,7 @@ class Sketch extends Applet {
         // Set width and height to be half of the screen size
         PVector screenSize = getScaledScreenSize();
         size((int) screenSize.x / 2, (int) screenSize.y / 2);
-        setResizable(true); // TODO make this work
+        setResizable(true);
 
         setTitle("Vim Motions for Notepad");
         exitOnEscape(false);
