@@ -211,7 +211,7 @@ public class Applet extends JPanel implements PConstants, Runnable {
 
         frame.addComponentListener(new ComponentAdapter() {
             public void componentResized(ComponentEvent componentEvent) {
-                windowResize();
+                eventQueue.add(componentEvent);
             }
         });
 
@@ -388,6 +388,9 @@ public class Applet extends JPanel implements PConstants, Runnable {
             } else if (evt instanceof WindowEvent) {
                 WindowEvent windowEvent = (WindowEvent) evt;
                 handleWindowEvent(windowEvent);
+            } else if (evt instanceof ComponentEvent) {
+                ComponentEvent componentEvent = (ComponentEvent) evt;
+                handleComponentEvent(componentEvent);
             }
         }
     }
@@ -438,6 +441,12 @@ public class Applet extends JPanel implements PConstants, Runnable {
             windowActivated();
         } else if (evt.getID() == WindowEvent.WINDOW_DEACTIVATED) {
             windowDeactivated();
+        }
+    }
+
+    private void handleComponentEvent(ComponentEvent evt) {
+        if (evt.getID() == ComponentEvent.COMPONENT_RESIZED) {
+            windowResize();
         }
     }
 
