@@ -235,6 +235,14 @@ public class Cursor extends PComponent implements EventIgnorer {
         content.set(y, line.substring(0, x) + line.substring(x + 1));
     }
 
+    public void deleteToLineEnd() {
+        if (isEndOfLine())
+            return;
+
+        String line = content.get(y);
+        content.set(y, line.substring(0, x));
+    }
+
     public void newLineBelow() {
         content.add(y + 1, "");
         y++;

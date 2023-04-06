@@ -252,13 +252,13 @@ class Editor extends PComponent {
             case 'B':
                 cursor.previousWordWithPunctuation();
                 return true;
-            // case 'C':
-            // cursor.deleteToLineEnd();
-            // mode = Mode.INSERT;
-            // return true;
-            // case 'D':
-            // cursor.deleteToLineEnd();
-            // return true;
+            case 'C':
+            cursor.deleteToLineEnd();
+            mode = Mode.INSERT;
+            return true;
+            case 'D':
+            cursor.deleteToLineEnd();
+            return true;
             case 'e':
                 cursor.endOfWord();
                 return true;
