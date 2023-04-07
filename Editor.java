@@ -34,6 +34,7 @@ class Editor extends PComponent {
     private color backgroundColor, textColor, currentLineColor, cursorColor, highlightColor;
     private int fontSize = 20;
     private String fontFamily = "Arial";
+    private int tabSize = 4;
 
     private float lineHeight;
 
@@ -94,6 +95,7 @@ class Editor extends PComponent {
 
             fontSize = parseInt(properties.getProperty("fontSize"));
             fontFamily = properties.getProperty("fontFamily");
+            tabSize = parseInt(properties.getProperty("tabSize"));
 
             cursorBlinkSpeed = parseInt(properties.getProperty("cursorBlinkSpeed"));
 
@@ -124,7 +126,7 @@ class Editor extends PComponent {
                 // TODO - this will probably break with multi cursors cause if you delete a line
                 // then the next cursor will be on the wrong line
                 if (keysPressed.contains("Ctrl")) {
-                    for (Cursor cursor : cursors) {
+                    for (Cursor cursor : activeCursors) {
                         int previousX = cursor.x;
                         int previousY = cursor.y;
                         cursor.previousWord();
@@ -147,7 +149,7 @@ class Editor extends PComponent {
 
                     return;
                 }
-                for (Cursor cursor : cursors) {
+                for (Cursor cursor : activeCursors) {
                     int x = parseInt(cursor.x);
                     int y = parseInt(cursor.y);
                     if (x == 0 && y == 0)
@@ -166,7 +168,7 @@ class Editor extends PComponent {
                 }
                 return;
             case "Enter":
-                for (Cursor cursor : cursors) {
+                for (Cursor cursor : activeCursors) {
                     int x = parseInt(cursor.x);
                     int y = parseInt(cursor.y);
                     content.add(y + 1, content.get(y).substring(x));
@@ -177,6 +179,7 @@ class Editor extends PComponent {
                 return;
             case "Tab":
                 keyToWrite = '\t';
+                // TODO #1 keyPressed does not even get called when tab is pressed
                 break;
             case "Shift":
                 return;
@@ -190,7 +193,7 @@ class Editor extends PComponent {
                 return;
         }
 
-        for (Cursor cursor : cursors) {
+        for (Cursor cursor : activeCursors) {
             int x = parseInt(cursor.x);
             int y = parseInt(cursor.y);
             content.set(y, content.get(y).substring(0, x) + keyToWrite + content.get(y).substring(x));
@@ -207,22 +210,22 @@ class Editor extends PComponent {
         }
 
         if (keyString.equals("Left")) {
-            for (Cursor cursor : cursors)
+            for (Cursor cursor : activeCursors)
                 cursor.left();
             return;
         }
         if (keyString.equals("Right")) {
-            for (Cursor cursor : cursors)
+            for (Cursor cursor : activeCursors)
                 cursor.right();
             return;
         }
         if (keyString.equals("Up")) {
-            for (Cursor cursor : cursors)
+            for (Cursor cursor : activeCursors)
                 cursor.up();
             return;
         }
         if (keyString.equals("Down")) {
-            for (Cursor cursor : cursors)
+            for (Cursor cursor : activeCursors)
                 cursor.down();
             return;
         }
@@ -297,6 +300,8 @@ class Editor extends PComponent {
             // Reset cursor
             cursors = new ArrayList<>();
             cursors.add(new Cursor(0, 0));
+            activeCursors = new ArrayList<>();
+            activeCursors.add(cursors.get(0));
 
             scanner.close();
         } catch (FileNotFoundException e) {
@@ -328,6 +333,7 @@ class Editor extends PComponent {
         switch (motion) {
             case "w":
                 saveFile();
+                errorMessage = "File saved!";
                 return true;
             case "wq":
                 saveFile();
@@ -635,7 +641,7 @@ class Editor extends PComponent {
             if (motion.length() > 0) {
                 motion = motion.substring(0, motion.length() - 1);
             } else {
-                for (Cursor cursor : cursors)
+                for (Cursor cursor : activeCursors)
                     cursor.left();
             }
             return true;
@@ -668,6 +674,14 @@ class Editor extends PComponent {
     public boolean handleNormalMode() {
         if (key == 'v') {
             mode = Mode.VISUAL;
+            for (int i = 0; i < cursors.size(); i++) {
+                Cursor cursor = cursors.get(i);
+                if (isActive(cursor)) {
+                    Cursor newCursor = new Cursor(cursor.x, cursor.y);
+                    newCursor.setContent(content);
+                    cursors.add(i + 1, newCursor);
+                }
+            }
             return true;
         }
 
@@ -678,6 +692,7 @@ class Editor extends PComponent {
         // Escape and they aren't typing a motion right now
         if (keyString.equals("Escape") && motion.length() == 0) {
             mode = Mode.NORMAL;
+            removeNonActiveCursors();
             return true;
         }
 
@@ -689,20 +704,20 @@ class Editor extends PComponent {
             case INSERT:
                 handleInsertMode();
                 lastBlink = millis();
-                for (Cursor cursor : cursors)
+                for (Cursor cursor : activeCursors)
                     cursor.makeVisible();
                 break;
             case NORMAL:
                 if (handleNormalMode()) {
                     lastBlink = millis();
-                    for (Cursor cursor : cursors)
+                    for (Cursor cursor : activeCursors)
                         cursor.makeVisible();
                 }
                 break;
             case VISUAL:
                 if (handleVisualMode()) {
                     lastBlink = millis();
-                    for (Cursor cursor : cursors)
+                    for (Cursor cursor : activeCursors)
                         cursor.makeVisible();
                 }
                 break;
@@ -749,7 +764,7 @@ class Editor extends PComponent {
 
         fill(backgroundColor);
         rect(0, height - bottomMargin, width, bottomMargin);
-        fill(highlightColor);
+        fill(255, 35);
         rect(0, height - bottomMargin, width, lineHeight);
 
         translate(0, height - bottomMargin + lineHeight / 2);
@@ -799,10 +814,60 @@ class Editor extends PComponent {
         pop();
     }
 
+    private List<PVector> getSelectedCharacters() {
+        if (mode != Mode.VISUAL)
+            return new ArrayList<PVector>();
+
+        List<PVector> selectedCharacters = new ArrayList<PVector>();
+        for (int i = 0; i < cursors.size(); i++) {
+            if (!isActive(cursors.get(i)))
+                continue;
+
+            // TODO - is this bad for performance?
+            Cursor start = cursors.get(i);
+            Cursor end = cursors.get(i + 1);
+            if (cursors.get(i).toRightOf(cursors.get(i + 1))) {
+                start = cursors.get(i + 1);
+                end = cursors.get(i);
+            }
+
+            Cursor cursor = new Cursor(start.x, start.y);
+            cursor.setContent(content);
+            // While it hasn't reached the end, add the character to the list and then move
+            // it to the right
+            while (cursor.y != end.y || cursor.x != end.x) {
+                selectedCharacters.add(new PVector(cursor.x, cursor.y));
+                cursor.right();
+            }
+        }
+
+        return selectedCharacters;
+    }
+
+    private boolean isActive(Cursor cursor) {
+        return activeCursors.contains(cursor);
+    }
+
+    private void removeNonActiveCursors() {
+        for (int i = cursors.size() - 1; i >= 0; i--) {
+            Cursor cursor = cursors.get(i);
+            if (!activeCursors.contains(cursor))
+                cursors.remove(i);
+        }
+    }
+
+    private void updateCursors() {
+        for (Cursor cursor : cursors) {
+            if (!activeCursors.contains(cursor))
+                cursor.makeInvisible();
+        }
+    }
+
     public void draw() {
         updateViewportOffset();
         translate(PVector.mult(viewportOffset, -1)); // -1 cause if the viewport is looking 300 down, we need to move
                                                      // the content up 300
+        updateCursors();
 
         background(backgroundColor);
 
@@ -843,7 +908,7 @@ class Editor extends PComponent {
         // Toggle cursor visibility
         if (millis() - lastBlink > cursorBlinkSpeed) {
             lastBlink = millis();
-            for (Cursor cursor : cursors)
+            for (Cursor cursor : activeCursors)
                 cursor.toggleVisibility();
         }
 
@@ -855,8 +920,28 @@ class Editor extends PComponent {
         // Draw text
         fill(textColor);
         push();
-        for (String line : content) {
-            text(line, 0, lineHeight / 2);
+        List<PVector> selectedCharacters = getSelectedCharacters();
+        for (int i = 0; i < content.size(); i++) {
+            push();
+            String line = content.get(i);
+            for (int j = 0; j < line.length(); j++) {
+                char c = line.charAt(j);
+                if (selectedCharacters.contains(new PVector(j, i))) {
+                    fill(highlightColor);
+                    float rectSize = textWidth(c + "");
+                    if (c == '\t')
+                        rectSize = tabSize * textWidth(" ");
+                    rect(0, 0, rectSize, lineHeight);
+                    fill(textColor);
+                }
+                if (c == '\t') {
+                    translate(tabSize * textWidth(" "), 0);
+                } else {
+                    text(c, 0, lineHeight / 2);
+                    translate(textWidth(c + ""), 0);
+                }
+            }
+            pop();
             translate(0, lineHeight);
         }
         pop();

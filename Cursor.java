@@ -414,6 +414,16 @@ public class Cursor extends PComponent implements EventIgnorer {
         }
     }
 
+    public boolean toRightOf(Cursor other) {
+        if (y > other.y)
+            return true;
+
+        if (y < other.y)
+            return false;
+
+        return x > other.x;
+    }
+
     private PVector getTextPosition(int x, int y) {
         if (content.get(y).length() == 0)
             return new PVector(0, textHeight("A") * y);
