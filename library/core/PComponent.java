@@ -182,6 +182,10 @@ public class PComponent extends PFunctions {
         applet.displayFrameRate();
     }
 
+    public void setTitle(String title) {
+        applet.setTitle(title);
+    }
+
     public void background(color color) {
         applet.background(color);
     }

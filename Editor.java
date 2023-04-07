@@ -257,6 +257,12 @@ class Editor extends PComponent {
             int userSelection = fileChooser.showSaveDialog(null);
             if (userSelection == JFileChooser.APPROVE_OPTION) {
                 file = new File(fileChooser.getSelectedFile().getAbsolutePath());
+                String name = file.getName();
+                int index = name.lastIndexOf('.');
+                if (index > 0)
+                    name = name.substring(0, index);
+                name = name.substring(0, 1).toUpperCase() + name.substring(1);
+                setTitle(name);
             } else {
                 return;
             }
@@ -302,6 +308,12 @@ class Editor extends PComponent {
         int userSelection = fileChooser.showOpenDialog(null);
         if (userSelection == JFileChooser.APPROVE_OPTION) {
             file = fileChooser.getSelectedFile();
+            String name = file.getName();
+            int index = name.lastIndexOf('.');
+            if (index > 0)
+                name = name.substring(0, index);
+            name = name.substring(0, 1).toUpperCase() + name.substring(1);
+            setTitle(name);
             loadFileContents();
         }
     }
