@@ -6,6 +6,10 @@ public class Cursor extends PComponent implements EventIgnorer {
         LETTER, PUNCTUATION, SPACE, NUMBER
     }
 
+    private enum BracketType {
+        CURLY, SQUARE, PARENTHESIS, TAG
+    }
+
     int x;
     int y;
 
@@ -217,14 +221,54 @@ public class Cursor extends PComponent implements EventIgnorer {
             return;
         }
 
+        // If the char to my right is not my type, I'm at the end of a word and should
+        // first skip to it
+        if (getCharType(x, y) != getCharType(x + 1, y))
+            nextWord();
+
+        // If I'm at the end of the line after moving, I'm done
+        if (isEndOfLine())
+            return;
+
         // Keep going until I reach a new char type
         CharType type = getCharType(x, y);
         while (isInLine() && getCharType(x, y) == type)
             x++;
 
-        // If I'm on a space, move forward until I reach a non-space
-        if (getCharType(x, y) == CharType.SPACE)
-            x += findFirstNonWhitespace(content.get(y).substring(x));
+        // Go back one
+        x--;
+    }
+
+    public void endOfWordWithPunctuation() {
+        if (isEndOfLine() && y == content.size() - 1)
+            return;
+
+        if (isEndOfLine()) {
+            y++;
+            findFirstNonWhitespace();
+            return;
+        }
+
+        // If the char to my right is a space, I'm at the end of a word and should skip
+        // to the next one
+        if (getCharType(x + 1, y) == CharType.SPACE) {
+            nextWordWithPunctuation();
+        }
+
+        // If I'm at the end of the line after moving, I'm done
+        if (isEndOfLine())
+            return;
+
+        // Keep going until I reach a space
+        while (isInLine() && getCharType(x, y) != CharType.SPACE)
+            x++;
+
+        // If I'm at the end of the line, I'm done
+        if (isEndOfLine())
+            return;
+
+        // Go back one
+        x--;
     }
 
     public void deleteCurrentCharacter() {
@@ -252,6 +296,46 @@ public class Cursor extends PComponent implements EventIgnorer {
     public void newLineAbove() {
         content.add(y, "");
         x = 0;
+    }
+
+    public void findMatchingBracket() {
+        BracketType bracketType = getBracketType(x, y);
+        char bracketChar = content.get(y).charAt(x);
+        int bracketCount = isOpeningBracket(bracketChar) ? 1 : -1;
+
+        int initialX = x;
+        int initialY = y;
+        boolean firstRound = true;
+        while (bracketCount != 0) {
+            BracketType currentBracketType = getBracketType(x, y);
+            if (currentBracketType == bracketType) {
+                if (firstRound)
+                    firstRound = false;
+                else {
+                    if (isOpeningBracket(content.get(y).charAt(x)))
+                        bracketCount++;
+                    else
+                        bracketCount--;
+                }
+            }
+
+            if (bracketCount == 0)
+                return;
+
+            int previousX = x;
+            int previousY = y;
+            if (isOpeningBracket(bracketChar))
+                right();
+            else
+                left();
+
+            if (x == previousX && y == previousY) {
+                x = initialX;
+                y = initialY;
+                return;
+            }
+
+        }
     }
 
     private int findLastNonWhitespace(String line) {
@@ -282,6 +366,23 @@ public class Cursor extends PComponent implements EventIgnorer {
         return CharType.PUNCTUATION;
     }
 
+    private BracketType getBracketType(int x, int y) {
+        char c = content.get(y).charAt(x);
+
+        if (c == '(' || c == ')')
+            return BracketType.PARENTHESIS;
+        if (c == '[' || c == ']')
+            return BracketType.SQUARE;
+        if (c == '{' || c == '}')
+            return BracketType.CURLY;
+
+        return BracketType.TAG;
+    }
+
+    private boolean isOpeningBracket(char c) {
+        return c == '(' || c == '[' || c == '{' || c == '<';
+    }
+
     private boolean isEndOfLine() {
         return x == content.get(y).length() - 1;
     }
@@ -292,6 +393,14 @@ public class Cursor extends PComponent implements EventIgnorer {
 
     public int getEndOfLine() {
         return max(content.get(y).length() - 1, 0);
+    }
+
+    public boolean isEndOfContent() {
+        return y == content.size() - 1 && isEndOfLine();
+    }
+
+    public boolean isStartOfContent() {
+        return y == 0 && x == 0;
     }
 
     private boolean onCharacter() {

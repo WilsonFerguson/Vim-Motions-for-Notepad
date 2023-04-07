@@ -282,6 +282,10 @@ class Editor extends PComponent {
             while (scanner.hasNextLine())
                 content.add(scanner.nextLine());
 
+            // Reset cursor
+            cursors = new ArrayList<>();
+            cursors.add(new Cursor(0, 0));
+
             scanner.close();
         } catch (FileNotFoundException e) {
             println("Unable to open file: " + e.getMessage());
@@ -380,9 +384,9 @@ class Editor extends PComponent {
             case 'e':
                 cursor.endOfWord();
                 return true;
-            // case 'E':
-            // cursor.endOfWordWithPunctuation();
-            // return true;
+            case 'E':
+                cursor.endOfWordWithPunctuation();
+                return true;
             case 'h':
                 cursor.left();
                 return true;
@@ -395,9 +399,9 @@ class Editor extends PComponent {
             case 'l':
                 cursor.right();
                 return true;
-            // case '%';
-            // cursor.findMatchingBracket();
-            // return true;
+            case '%':
+                cursor.findMatchingBracket();
+                return true;
             case '0':
                 cursor.x = 0;
                 return true;
