@@ -405,9 +405,11 @@ class Editor extends PComponent {
             case 'C':
                 cursor.deleteToLineEnd();
                 mode = Mode.INSERT;
+                fileSaved = false;
                 return true;
             case 'D':
                 cursor.deleteToLineEnd();
+                fileSaved = false;
                 return true;
             case 'e':
                 cursor.endOfWord();
@@ -448,6 +450,7 @@ class Editor extends PComponent {
             case 's':
                 cursor.deleteCurrentCharacter();
                 mode = Mode.INSERT;
+                fileSaved = false;
                 return true;
             // case 'p':
             // cursor.pasteAfter();
@@ -457,14 +460,17 @@ class Editor extends PComponent {
             // return true;
             case 'x':
                 cursor.deleteCurrentCharacter();
+                fileSaved = false;
                 return true;
             case 'o':
                 cursor.newLineBelow();
                 mode = Mode.INSERT;
+                fileSaved = false;
                 return true;
             case 'O':
                 cursor.newLineAbove();
                 mode = Mode.INSERT;
+                fileSaved = false;
                 return true;
         }
 
