@@ -633,16 +633,20 @@ class Editor extends PComponent {
     }
 
     public boolean handleNormalMode() {
-        switch (key) {
-            case 'v':
-                mode = Mode.VISUAL;
-                return true;
+        if (key == 'v') {
+            mode = Mode.VISUAL;
+            return true;
         }
 
         return handleMotions();
     }
 
     public boolean handleVisualMode() {
+        // Escape and they aren't typing a motion right now
+        if (keyString.equals("Escape") && motion.length() == 0) {
+            mode = Mode.NORMAL;
+            return true;
+        }
 
         return handleMotions();
     }
@@ -809,21 +813,22 @@ class Editor extends PComponent {
         textAlign(TextAlignment.LEFT);
 
         translate(0, lineHeight - 3);
-        String modeString = "";
-        switch (mode) {
-            case NORMAL:
-                break;
-            case INSERT:
-                modeString = "-- INSERT --";
-                break;
-            case VISUAL:
-                modeString = "-- VISUAL --";
-                break;
-        }
+        if (motion.length() == 0) {
+            String modeString = "";
+            switch (mode) {
+                case NORMAL:
+                    break;
+                case INSERT:
+                    modeString = "-- INSERT --";
+                    break;
+                case VISUAL:
+                    modeString = "-- VISUAL --";
+                    break;
+            }
 
-        text(modeString, 5, 0);
-
-        text(motion, 5, 0);
+            text(modeString, 5, 0);
+        } else
+            text(motion, 5, 0);
 
         pop();
     }
