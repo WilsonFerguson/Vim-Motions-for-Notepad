@@ -7,7 +7,7 @@ public class Cursor extends PComponent implements EventIgnorer {
     }
 
     private enum BracketType {
-        CURLY, SQUARE, PARENTHESIS, TAG
+        CURLY, SQUARE, PARENTHESIS, TAG, NONE
     }
 
     int x;
@@ -375,8 +375,10 @@ public class Cursor extends PComponent implements EventIgnorer {
             return BracketType.SQUARE;
         if (c == '{' || c == '}')
             return BracketType.CURLY;
+        if (c == '<' || c == '>')
+            return BracketType.TAG;
 
-        return BracketType.TAG;
+        return BracketType.NONE;
     }
 
     private boolean isOpeningBracket(char c) {
