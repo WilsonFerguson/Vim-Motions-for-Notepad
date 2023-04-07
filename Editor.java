@@ -43,7 +43,8 @@ class Editor extends PComponent {
     private String previousMotion = "";
     // TODO - add "u"
     private char[] operators = { 'c', 'd', 'y', 'i', 'a', 'f', 'F', 'r' }; // TODO - add g, <, >, z
-    private char[] motions = { 'w', 'b', 'W', 'B', 'C', 'D', 'e', 'E', 'h', 'j', 'k', 'l', '%', '0', '_', '^', '$',
+    private char[] motions = { 'i', 'a', 'I', 'A', 'w', 'b', 'W', 'B', 'C', 'D', 'e', 'E', 'h', 'j', 'k', 'l', '%', '0',
+            '_', '^', '$',
             'G', 's', 'p', 'P', 'x', 'o', 'O' };
     private char[] commands = { ':', '/', '?', '*' }; // TODO - add others?
 
@@ -374,6 +375,21 @@ class Editor extends PComponent {
 
     private boolean runMotion(Cursor cursor, char motion) {
         switch (motion) {
+            case 'i':
+                mode = Mode.INSERT;
+                return true;
+            case 'a':
+                mode = Mode.INSERT;
+                cursor.right();
+                return true;
+            case 'I':
+                cursor.findFirstNonWhitespace();
+                mode = Mode.INSERT;
+                return true;
+            case 'A':
+                cursor.findLastNonWhitespace();
+                mode = Mode.INSERT;
+                return true;
             case 'w':
                 cursor.nextWord();
                 return true;
@@ -618,24 +634,6 @@ class Editor extends PComponent {
 
     public boolean handleNormalMode() {
         switch (key) {
-            case 'i':
-                mode = Mode.INSERT;
-                return true;
-            case 'a':
-                mode = Mode.INSERT;
-                for (Cursor cursor : cursors)
-                    cursor.x += 1;
-                return true;
-            case 'I':
-                mode = Mode.INSERT;
-                for (Cursor cursor : cursors)
-                    cursor.findFirstNonWhitespace();
-                return true;
-            case 'A':
-                mode = Mode.INSERT;
-                for (Cursor cursor : cursors)
-                    cursor.findLastNonWhitespace();
-                return true;
             case 'v':
                 mode = Mode.VISUAL;
                 return true;
@@ -645,7 +643,6 @@ class Editor extends PComponent {
     }
 
     public boolean handleVisualMode() {
-        // TODO - add the visual mode only commands
 
         return handleMotions();
     }
