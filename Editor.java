@@ -23,7 +23,7 @@ class Editor extends PComponent {
 
     // Cursors - Store the cursor positions
     private List<Cursor> cursors;
-    private int currentCursor = 0;
+    private List<Cursor> activeCursors;
     private int cursorBlinkSpeed = 300;
     private int lastBlink;
 
@@ -36,7 +36,10 @@ class Editor extends PComponent {
     private String fontFamily = "Arial";
 
     private float lineHeight;
+
+    // Bottom information section
     private float bottomMargin;
+    private String errorMessage = "";
 
     // Motions
     private String motion = "";
@@ -58,6 +61,8 @@ class Editor extends PComponent {
 
         cursors = new ArrayList<>(1);
         createCursor();
+        activeCursors = new ArrayList<>(1);
+        activeCursors.add(cursors.get(0));
 
         noStroke();
         textSize(fontSize);
@@ -329,8 +334,10 @@ class Editor extends PComponent {
                 exit();
                 return true;
             case "q":
-                if (!fileSaved)
+                if (!fileSaved) {
+                    errorMessage = "Error: File not saved (press a command or enter to continue)";
                     return true; // Remove the motion
+                }
 
                 exit();
                 return true;
@@ -479,7 +486,7 @@ class Editor extends PComponent {
 
     // w, 3b, etc.
     private boolean runMotion(int numTimes, char motion) {
-        for (Cursor cursor : cursors) {
+        for (Cursor cursor : activeCursors) {
             for (int i = 0; i < numTimes; i++) {
                 boolean result = runMotion(cursor, motion);
                 if (!result)
@@ -633,6 +640,10 @@ class Editor extends PComponent {
             }
             return true;
         }
+        if (errorMessage.length() > 0 && keyString.equals("Enter")) {
+            errorMessage = "";
+            return true;
+        }
         if (motion.length() > 0 && keyString.equals("Enter")) {
             if (isCommand(motion.charAt(0))) {
                 if (parseCommand())
@@ -648,6 +659,8 @@ class Editor extends PComponent {
         }
 
         motion += key;
+        if (errorMessage.length() > 0)
+            errorMessage = "";
         parseMotion();
         return true;
     }
@@ -700,7 +713,7 @@ class Editor extends PComponent {
     }
 
     private void updateViewportOffset() {
-        PVector cursorPos = cursors.get(currentCursor).getPos();
+        PVector cursorPos = activeCursors.get(0).getPos();
         // If cursorPos.y is less than the viewportOffset.y, then we need to move the
         // viewport up
         // println(cursorPos.y, viewportOffset.y);
@@ -719,19 +732,75 @@ class Editor extends PComponent {
         // TODO - handle horizontal scrolling
     }
 
-    private void sortCursors() {
-        // Sort cursors from bottom to top
-        Collections.sort(cursors, new Comparator<Cursor>() {
-            @Override
-            public int compare(Cursor c1, Cursor c2) {
-                return c1.y - c2.y;
-            }
-        });
+    public void drawInformationSection() {
+        push();
+        resetTranslation();
+
+        // Draw bottom two lines
+        // (file path) on left, on right: line number, column number, percentage of file
+        // (mode if not in normal), on right: motion being typed
+        String filePath = "[No name]";
+        if (file != null) {
+            filePath = file.getAbsolutePath();
+
+            if (!fileSaved)
+                filePath += " [+]";
+        }
+
+        fill(backgroundColor);
+        rect(0, height - bottomMargin, width, bottomMargin);
+        fill(highlightColor);
+        rect(0, height - bottomMargin, width, lineHeight);
+
+        translate(0, height - bottomMargin + lineHeight / 2);
+        fill(textColor);
+        text(filePath, 5, 0);
+
+        Cursor cursor = activeCursors.get(0);
+        String position = cursor.y + 1 + "," + cursor.x;
+        text(position, width * 0.8, 0);
+
+        int percent = (int) map(cursor.y, 0, content.size() - 1, 0, 100);
+        String percentage = str(percent);
+        if (percentage.equals("0"))
+            percentage = "Top";
+        else if (percentage.equals("100"))
+            percentage = "Bot";
+        else
+            percentage += "%";
+        // TODO make this based on the viewport's y instead of the cursor position.
+
+        textAlign(TextAlignment.RIGHT);
+        text(percentage, width - textWidth(percentage) / 2, 0);
+        textAlign(TextAlignment.LEFT);
+
+        translate(0, lineHeight - 3);
+        if (errorMessage.length() > 0) {
+            text(errorMessage, 5, 0);
+        } else {
+            if (motion.length() == 0) {
+                String modeString = "";
+                switch (mode) {
+                    case NORMAL:
+                        break;
+                    case INSERT:
+                        modeString = "-- INSERT --";
+                        break;
+                    case VISUAL:
+                        modeString = "-- VISUAL --";
+                        break;
+                }
+
+                text(modeString, 5, 0);
+            } else
+                text(motion, 5, 0);
+        }
+
+        pop();
     }
 
     public void draw() {
         updateViewportOffset();
-        sortCursors();
         translate(PVector.mult(viewportOffset, -1)); // -1 cause if the viewport is looking 300 down, we need to move
                                                      // the content up 300
 
@@ -747,12 +816,12 @@ class Editor extends PComponent {
             for (int i = 0; i < content.size(); i++) {
                 int lineNumber = i + 1;
                 if (relativeLineNumbers) {
-                    lineNumber = abs(cursors.get(currentCursor).y - i);
-                    if (i == cursors.get(currentCursor).y)
+                    lineNumber = abs((activeCursors.get(0).y - i));
+                    if (i == (activeCursors.get(0)).y)
                         lineNumber = i + 1;
                 }
 
-                if (i == cursors.get(currentCursor).y)
+                if (i == (activeCursors.get(0)).y)
                     fill(currentLineColor);
                 else
                     fill(color.fromHSB(hue(textColor), saturation(textColor), brightness));
@@ -792,65 +861,6 @@ class Editor extends PComponent {
         }
         pop();
 
-        // Draw bottom two lines
-        // (file path) on left, on right: line number, column number, percentage of file
-        // (mode if not in normal), on right: motion being typed
-        String filePath = "[No name]";
-        if (file != null) {
-            filePath = file.getAbsolutePath();
-
-            if (!fileSaved)
-                filePath += " [+]";
-        }
-
-        push();
-        resetTranslation();
-
-        fill(backgroundColor);
-        rect(0, height - bottomMargin, width, bottomMargin);
-        fill(highlightColor);
-        rect(0, height - bottomMargin, width, lineHeight);
-
-        translate(0, height - bottomMargin + lineHeight / 2);
-        fill(textColor);
-        text(filePath, 5, 0);
-
-        Cursor cursor = cursors.get(currentCursor);
-        String position = cursor.y + 1 + "," + cursor.x;
-        text(position, width * 0.8, 0);
-
-        int percent = (int) map(cursor.y, 0, content.size() - 1, 0, 100);
-        String percentage = str(percent);
-        if (percentage.equals("0"))
-            percentage = "Top";
-        else if (percentage.equals("100"))
-            percentage = "Bot";
-        else
-            percentage += "%";
-        // TODO make this based on the viewport's y instead of the cursor position.
-
-        textAlign(TextAlignment.RIGHT);
-        text(percentage, width - textWidth(percentage) / 2, 0);
-        textAlign(TextAlignment.LEFT);
-
-        translate(0, lineHeight - 3);
-        if (motion.length() == 0) {
-            String modeString = "";
-            switch (mode) {
-                case NORMAL:
-                    break;
-                case INSERT:
-                    modeString = "-- INSERT --";
-                    break;
-                case VISUAL:
-                    modeString = "-- VISUAL --";
-                    break;
-            }
-
-            text(modeString, 5, 0);
-        } else
-            text(motion, 5, 0);
-
-        pop();
+        drawInformationSection();
     }
 }
