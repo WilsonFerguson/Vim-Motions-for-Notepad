@@ -609,8 +609,12 @@ class Editor extends PComponent {
             return true;
         }
         if (keyString.equals("Backspace")) {
-            if (motion.length() > 0)
+            if (motion.length() > 0) {
                 motion = motion.substring(0, motion.length() - 1);
+            } else {
+                for (Cursor cursor : cursors)
+                    cursor.left();
+            }
             return true;
         }
         if (motion.length() > 0 && keyString.equals("Enter")) {
@@ -807,6 +811,7 @@ class Editor extends PComponent {
             percentage = "Bot";
         else
             percentage += "%";
+        // TODO make this based on the viewport's y instead of the cursor position.
 
         textAlign(TextAlignment.RIGHT);
         text(percentage, width - textWidth(percentage) / 2, 0);
