@@ -329,16 +329,17 @@ public class Cursor extends PComponent implements EventIgnorer {
             return;
 
         PVector pos = getPos();
+        float lineHeight = textHeight("A");
         if (mode == Mode.INSERT) {
-            rect(pos.x, pos.y, 2, textHeight("A"));
+            rect(pos.x, pos.y, 2, lineHeight);
         } else {
             if (content.get(y).length() == 0) {
-                rect(pos.x, pos.y, textWidth("A"), textHeight("A"));
+                rect(pos.x, pos.y, textWidth("A"), lineHeight);
                 return;
             }
 
             char c = content.get(parseInt(y)).charAt(parseInt(x));
-            rect(pos.x, pos.y, textWidth(c + ""), textHeight("A"));
+            rect(pos.x, pos.y, textWidth(c + ""), lineHeight);
         }
     }
 }

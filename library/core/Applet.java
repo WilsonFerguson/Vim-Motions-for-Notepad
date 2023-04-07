@@ -1176,27 +1176,27 @@ public class Applet extends JPanel implements PConstants, Runnable {
     }
 
     // Returns the width of the text
-    public int textWidth(String text) {
+    public float textWidth(String text) {
         oldTransform = g2d.getTransform();
 
-        g2d.setFont(new Font(textFont, Font.PLAIN, (int) textSize));
-        int wid = (int) g2d.getFontMetrics().getStringBounds(text, g2d).getWidth();
+        setFont();
+        double wid = g2d.getFontMetrics().getStringBounds(text, g2d).getWidth();
 
         g2d.setTransform(oldTransform);
-        return wid;
+        return (float) wid;
     }
 
     // Returns the height of the text
-    public int textHeight(String text) {
+    public float textHeight(String text) {
         // int hei = frame.getGraphics().getFontMetrics().getHeight();
 
         oldTransform = g2d.getTransform();
 
-        g2d.setFont(new Font(textFont, Font.PLAIN, (int) textSize));
-        int hei = (int) g2d.getFontMetrics().getStringBounds(text, g2d).getHeight();
+        setFont();
+        double hei = g2d.getFontMetrics().getStringBounds(text, g2d).getHeight();
 
         g2d.setTransform(oldTransform);
-        return hei;
+        return (float) hei;
     }
 
     private void drawGenericStart() {
@@ -1372,6 +1372,19 @@ public class Applet extends JPanel implements PConstants, Runnable {
         triangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
     }
 
+    private void setFont() {
+        File fontFile = new File(textFont);
+        Font font = new Font(textFont, Font.PLAIN, (int) textSize);
+        if (fontFile.exists()) {
+            try {
+                font = Font.createFont(Font.TRUETYPE_FONT, fontFile);
+            } catch (FontFormatException | IOException e) {
+                e.printStackTrace();
+            }
+        }
+        g2d.setFont(font.deriveFont(textSize));
+    }
+
     // Text
     private void drawText(String text, double x, double y) {
         if (text.equals("") || fillColor.equals(color(0, 0)))
@@ -1379,8 +1392,7 @@ public class Applet extends JPanel implements PConstants, Runnable {
 
         drawGenericStart();
 
-        Font font = new Font(textFont, Font.PLAIN, (int) textSize);
-        g2d.setFont(font.deriveFont(textSize));
+        setFont();
 
         int w = g2d.getFontMetrics().stringWidth(text);
         int h = g2d.getFontMetrics().getHeight();

@@ -6,7 +6,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class PComponent extends PFunctions {
 
     // public static LinkedList<PComponent> components = new LinkedList<>();
-    public static CopyOnWriteArrayList<PComponent> components = new CopyOnWriteArrayList<PComponent>(); // Thread-safe but slower to add/remove
+    public static CopyOnWriteArrayList<PComponent> components = new CopyOnWriteArrayList<PComponent>(); // Thread-safe
+                                                                                                        // but slower to
+                                                                                                        // add/remove
 
     // static variables for all of the sim stuff
     public static Applet applet;
@@ -366,12 +368,12 @@ public class PComponent extends PFunctions {
     }
 
     // Returns the width of the text
-    public int textWidth(String text) {
+    public float textWidth(String text) {
         return applet.textWidth(text);
     }
 
     // Returns the height of the text
-    public int textHeight(String text) {
+    public float textHeight(String text) {
         return applet.textHeight(text);
     }
 

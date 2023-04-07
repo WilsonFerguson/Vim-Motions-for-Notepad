@@ -1,10 +1,17 @@
-import java.io.IOException;
+import java.io.*;
+import java.nio.file.Files;
 import java.util.*;
+
+import javax.swing.JFileChooser;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 import library.core.*;
 
 class Editor extends PComponent {
     private List<String> content;
+
+    private File file;
+    private boolean fileSaved = true;
 
     // Modes
     private Mode mode;
@@ -24,9 +31,12 @@ class Editor extends PComponent {
     private boolean relativeLineNumbers = true;
 
     // Properties
-    private color backgroundColor, textColor, currentLineColor, cursorColor;
+    private color backgroundColor, textColor, currentLineColor, cursorColor, highlightColor;
     private int fontSize = 20;
     private String fontFamily = "Arial";
+
+    private float lineHeight;
+    private float bottomMargin;
 
     // Motions
     private String motion = "";
@@ -53,11 +63,14 @@ class Editor extends PComponent {
         textFont(fontFamily);
         textAlign(TextAlignment.LEFT);
 
+        lineHeight = textHeight("A");
+        bottomMargin = lineHeight * 2.8f;
+
         lastBlink = millis();
 
         defaultViewportOffset = PVector.zero();
         if (showLineNumbers)
-            defaultViewportOffset.x = textWidth("000 ");
+            defaultViewportOffset.x = -textWidth("000 ");
 
         viewportOffset = defaultViewportOffset.copy();
     }
@@ -71,6 +84,7 @@ class Editor extends PComponent {
             textColor = color(properties.getProperty("textColor"));
             currentLineColor = color(properties.getProperty("currentLineColor"));
             cursorColor = color(properties.getProperty("cursorColor"));
+            highlightColor = color(properties.getProperty("highlightColor"));
 
             fontSize = parseInt(properties.getProperty("fontSize"));
             fontFamily = properties.getProperty("fontFamily");
@@ -176,6 +190,8 @@ class Editor extends PComponent {
             content.set(y, content.get(y).substring(0, x) + keyToWrite + content.get(y).substring(x));
             cursor.x++;
         }
+
+        fileSaved = false;
     }
 
     public void handleInsertMode() {
@@ -232,14 +248,84 @@ class Editor extends PComponent {
         return false;
     }
 
+    private void saveFile() {
+        if (file == null) {
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Save text file");
+            fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+
+            int userSelection = fileChooser.showSaveDialog(null);
+            if (userSelection == JFileChooser.APPROVE_OPTION) {
+                file = new File(fileChooser.getSelectedFile().getAbsolutePath());
+            } else {
+                return;
+            }
+        }
+
+        try {
+            FileWriter fileWriter = new FileWriter(file);
+            for (String line : content)
+                fileWriter.write(line + "\n");
+
+            fileWriter.close();
+        } catch (IOException e) {
+            println("Unable to save file: " + e.getMessage());
+        }
+
+        fileSaved = true;
+    }
+
+    private void loadFileContents() {
+        content = new ArrayList<>();
+        try {
+            Scanner scanner = new Scanner(file);
+            while (scanner.hasNextLine())
+                content.add(scanner.nextLine());
+
+            scanner.close();
+        } catch (FileNotFoundException e) {
+            println("Unable to open file: " + e.getMessage());
+        }
+    }
+
+    private void openExplorer() {
+        // Option to open a file
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Open text file");
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        fileChooser.setFileFilter(new FileNameExtensionFilter("Text files", "txt"));
+
+        int userSelection = fileChooser.showOpenDialog(null);
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            file = fileChooser.getSelectedFile();
+            loadFileContents();
+        }
+    }
+
     private boolean parseCommandColon(String motion) {
         switch (motion) {
             case "w":
+                saveFile();
+                return true;
             case "wq":
+                saveFile();
+                exit();
+                return true;
             case "q":
+                if (!fileSaved)
+                    return true; // Remove the motion
+
+                exit();
+                return true;
             case "q!":
+                exit();
+                return true;
             case "E":
+                openExplorer();
+                return true;
         }
+
+        return false;
     }
 
     private boolean parseCommandStar(String motion) {
@@ -285,12 +371,12 @@ class Editor extends PComponent {
                 cursor.previousWordWithPunctuation();
                 return true;
             case 'C':
-            cursor.deleteToLineEnd();
-            mode = Mode.INSERT;
-            return true;
+                cursor.deleteToLineEnd();
+                mode = Mode.INSERT;
+                return true;
             case 'D':
-            cursor.deleteToLineEnd();
-            return true;
+                cursor.deleteToLineEnd();
+                return true;
             case 'e':
                 cursor.endOfWord();
                 return true;
@@ -392,12 +478,6 @@ class Editor extends PComponent {
         if (motion.length() == 0)
             return;
 
-        if (isCommand(motion.charAt(0))) {
-            if (parseCommand())
-                motion = "";
-            return;
-        }
-
         // Structure:
         // (number?)(motion). Ex: 3w, $
         // (number?)(operator)(number?)(motion). Ex: 3dw, 2d3w, 2d$, d$, d5$
@@ -496,6 +576,18 @@ class Editor extends PComponent {
             motion = "";
             return true;
         }
+        if (keyString.equals("Backspace")) {
+            if (motion.length() > 0)
+                motion = motion.substring(0, motion.length() - 1);
+            return true;
+        }
+        if (motion.length() > 0 && keyString.equals("Enter")) {
+            if (isCommand(motion.charAt(0))) {
+                if (parseCommand())
+                    motion = "";
+                return true;
+            }
+        }
 
         String[] keysToIgnore = { "Shift", "Enter", "Tab", "Backspace", "Delete", "Control", "Alt", "Caps Lock" };
         for (String key : keysToIgnore) {
@@ -574,16 +666,17 @@ class Editor extends PComponent {
         PVector cursorPos = cursors.get(currentCursor).getPos();
         // If cursorPos.y is less than the viewportOffset.y, then we need to move the
         // viewport up
+        // println(cursorPos.y, viewportOffset.y);
         if (cursorPos.y < viewportOffset.y) {
             viewportOffset.y = cursorPos.y;
         }
 
         // If cursorPos.y is greater than the viewportOffset.y + height, then we need to
         // move the viewport down
-        int maxHeight = textHeight("A") * -2 + height;
-        if (cursorPos.y > viewportOffset.y + maxHeight) {
-            float diff = cursorPos.y - maxHeight;
-            viewportOffset.y = -diff;
+        float maxY = height - bottomMargin + viewportOffset.y;
+        if (cursorPos.y + lineHeight > maxY) {
+            float diff = maxY - (cursorPos.y + lineHeight);
+            viewportOffset.y -= diff;
         }
 
         // TODO - handle horizontal scrolling
@@ -602,10 +695,10 @@ class Editor extends PComponent {
     public void draw() {
         updateViewportOffset();
         sortCursors();
-        translate(viewportOffset);
+        translate(PVector.mult(viewportOffset, -1)); // -1 cause if the viewport is looking 300 down, we need to move
+                                                     // the content up 300
 
         background(backgroundColor);
-        int textHeight = textHeight("A");
 
         // Line numbers
         float brightness = brightness(textColor);
@@ -613,7 +706,7 @@ class Editor extends PComponent {
 
         if (showLineNumbers) {
             push();
-            translate(-viewportOffset.x, 0);
+            translate(viewportOffset.x, 0);
             for (int i = 0; i < content.size(); i++) {
                 int lineNumber = i + 1;
                 if (relativeLineNumbers) {
@@ -627,16 +720,16 @@ class Editor extends PComponent {
                 else
                     fill(color.fromHSB(hue(textColor), saturation(textColor), brightness));
 
-                text(lineNumber, 0, textHeight / 2);
-                translate(0, textHeight);
+                text(lineNumber, 0, lineHeight / 2);
+                translate(0, lineHeight);
             }
             pop();
 
             push();
-            translate(0, -viewportOffset.y);
+            translate(0, viewportOffset.y);
             stroke(color.fromHSB(hue(textColor), saturation(textColor), brightness));
             strokeWeight(1);
-            line(-3, 0, -3, height);
+            line(-3, 0, -3, height - bottomMargin - lineHeight / 2);
             pop();
         }
 
@@ -655,9 +748,68 @@ class Editor extends PComponent {
 
         // Draw text
         fill(textColor);
+        push();
         for (String line : content) {
-            text(line, 0, textHeight / 2);
-            translate(0, textHeight);
+            text(line, 0, lineHeight / 2);
+            translate(0, lineHeight);
         }
+        pop();
+
+        // Draw bottom two lines
+        // (file path) on left, on right: line number, column number, percentage of file
+        // (mode if not in normal), on right: motion being typed
+        String filePath = "[No name]";
+        if (file != null) {
+            filePath = file.getAbsolutePath();
+
+            if (!fileSaved)
+                filePath += " [+]";
+        }
+
+        push();
+        resetTranslation();
+
+        fill(highlightColor);
+        rect(0, height - bottomMargin - lineHeight / 2, width, lineHeight);
+
+        translate(0, height - bottomMargin);
+        fill(textColor);
+        text(filePath, 5, 0);
+
+        Cursor cursor = cursors.get(currentCursor);
+        String position = cursor.y + 1 + "," + cursor.x;
+        text(position, width * 0.8, 0);
+
+        int percent = (int) map(cursor.y, 0, content.size() - 1, 0, 100);
+        String percentage = str(percent);
+        if (percentage.equals("0"))
+            percentage = "Top";
+        else if (percentage.equals("100"))
+            percentage = "Bot";
+        else
+            percentage += "%";
+
+        textAlign(TextAlignment.RIGHT);
+        text(percentage, width - textWidth(percentage) / 2, 0);
+        textAlign(TextAlignment.LEFT);
+
+        translate(0, lineHeight - 3);
+        String modeString = "";
+        switch (mode) {
+            case NORMAL:
+                break;
+            case INSERT:
+                modeString = "-- INSERT --";
+                break;
+            case VISUAL:
+                modeString = "-- VISUAL --";
+                break;
+        }
+
+        text(modeString, 5, 0);
+
+        text(motion, 5, 0);
+
+        pop();
     }
 }
