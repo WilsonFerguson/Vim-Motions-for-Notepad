@@ -493,6 +493,16 @@ class Editor extends PComponent {
     // dw, d3w, 3cw, etc.
     private boolean runMotion(int numTimesTotal, char operator, int numTimes, char motion) {
         // TODO - implement
+        switch (operator) {
+            case 'c':
+            case 'd':
+            case 'y':
+            case 'i':
+            case 'a':
+            case 'f':
+            case 'F':
+            case 'r':
+        }
         return false;
     }
 
