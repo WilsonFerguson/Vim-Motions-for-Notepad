@@ -64,7 +64,7 @@ class Editor extends PComponent {
         textAlign(TextAlignment.LEFT);
 
         lineHeight = textHeight("A");
-        bottomMargin = lineHeight * 2.8f;
+        bottomMargin = lineHeight * 3.3f;
 
         lastBlink = millis();
 
@@ -733,7 +733,7 @@ class Editor extends PComponent {
             translate(0, viewportOffset.y);
             stroke(color.fromHSB(hue(textColor), saturation(textColor), brightness));
             strokeWeight(1);
-            line(-3, 0, -3, height - bottomMargin - lineHeight / 2);
+            line(-3, 0, -3, height - bottomMargin);
             pop();
         }
 
@@ -773,10 +773,12 @@ class Editor extends PComponent {
         push();
         resetTranslation();
 
+        fill(backgroundColor);
+        rect(0, height - bottomMargin, width, bottomMargin);
         fill(highlightColor);
-        rect(0, height - bottomMargin - lineHeight / 2, width, lineHeight);
+        rect(0, height - bottomMargin, width, lineHeight);
 
-        translate(0, height - bottomMargin);
+        translate(0, height - bottomMargin + lineHeight / 2);
         fill(textColor);
         text(filePath, 5, 0);
 
