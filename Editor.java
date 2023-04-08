@@ -853,7 +853,6 @@ class Editor extends PComponent {
                 cursor.right();
             }
             selectedCharacters.add(new PVector(cursor.x, cursor.y)); // Add the last character
-            println(selectedCharacters);
         }
 
         return selectedCharacters;
