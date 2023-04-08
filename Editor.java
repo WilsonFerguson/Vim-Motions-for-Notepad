@@ -683,6 +683,19 @@ class Editor extends PComponent {
                 }
             }
             return true;
+        } else if (key == 'V') {
+            mode = Mode.VISUAL;
+            for (int i = 0; i < cursors.size(); i++) {
+                Cursor cursor = cursors.get(i);
+                if (isActive(cursor)) {
+                    cursor.x = 0; // Go to the beginning of the line
+                    Cursor newCursor = new Cursor(cursor.x, cursor.y);
+                    newCursor.setContent(content);
+                    newCursor.x = content.get(cursor.y).length(); // Go to the end of the line
+                    cursors.add(i + 1, newCursor);
+                }
+            }
+            return true;
         }
 
         return handleMotions();
@@ -839,6 +852,8 @@ class Editor extends PComponent {
                 selectedCharacters.add(new PVector(cursor.x, cursor.y));
                 cursor.right();
             }
+            selectedCharacters.add(new PVector(cursor.x, cursor.y)); // Add the last character
+            println(selectedCharacters);
         }
 
         return selectedCharacters;
