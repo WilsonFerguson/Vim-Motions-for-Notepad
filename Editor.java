@@ -835,7 +835,7 @@ class Editor extends PComponent {
             cursor.setContent(content);
             // While it hasn't reached the end, add the character to the list and then move
             // it to the right
-            while (cursor.y != end.y || cursor.x != end.x) {
+            while (!cursor.equals(end)) {
                 selectedCharacters.add(new PVector(cursor.x, cursor.y));
                 cursor.right();
             }

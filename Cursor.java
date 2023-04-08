@@ -386,6 +386,8 @@ public class Cursor extends PComponent implements EventIgnorer {
     }
 
     private boolean isEndOfLine() {
+        if (content.get(y).length() == 0)
+            return true;
         return x == content.get(y).length() - 1;
     }
 
@@ -462,5 +464,14 @@ public class Cursor extends PComponent implements EventIgnorer {
             char c = content.get(parseInt(y)).charAt(parseInt(x));
             rect(pos.x, pos.y, textWidth(c + ""), lineHeight);
         }
+    }
+
+    @Override
+    public String toString() {
+        return "(" + x + ", " + y + ")";
+    }
+
+    public boolean equals(Cursor cursor) {
+        return cursor.x == x && cursor.y == y;
     }
 }
