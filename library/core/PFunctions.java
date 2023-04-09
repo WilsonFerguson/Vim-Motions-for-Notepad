@@ -117,6 +117,14 @@ public class PFunctions implements PConstants {
         Helper.openInBrowser(url);
     }
 
+    public String getClipboardContents() {
+        return Helper.getClipboardContents();
+    }
+
+    public void copyToClipboard(String text) {
+        Helper.copyToClipboard(text);
+    }
+
     public void append(byte[] array, byte value) {
         byte[] newArray = new byte[array.length + 1];
         for (int i = 0; i < array.length; i++) {

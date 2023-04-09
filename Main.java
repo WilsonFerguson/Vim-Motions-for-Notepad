@@ -1,5 +1,5 @@
 public class Main {
- public static void main (String[] args) {
-    new Sketch().startApplet();
- }
+   public static void main(String[] args) {
+      new Sketch().startApplet();
+   }
 }

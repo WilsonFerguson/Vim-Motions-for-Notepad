@@ -338,6 +338,28 @@ public class Cursor extends PComponent implements EventIgnorer {
         }
     }
 
+    public void pasteAfter() {
+        String data = getClipboardContents();
+        String[] lines = data.split("\n");
+        for (int i = 0; i < lines.length; i++) {
+            content.add(y + i + 1, lines[i]);
+        }
+        y += lines.length;
+        x = getEndOfLine();
+    }
+
+    public void pasteBefore() {
+        String data = getClipboardContents();
+        String[] lines = data.split("\n");
+        for (int i = 0; i < lines.length; i++) {
+            int index = y - (lines.length - i);
+            index = max(0, index);
+            content.add(index, lines[i]);
+        }
+        y += lines.length - 1;
+        x = getEndOfLine();
+    }
+
     private int findLastNonWhitespace(String line) {
         for (int i = line.length() - 1; i >= 0; i--)
             if (!Character.isWhitespace(line.charAt(i)))

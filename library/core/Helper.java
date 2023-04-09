@@ -6,6 +6,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
 import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.UnsupportedFlavorException;
 
 public class Helper {
 
@@ -368,6 +372,21 @@ public class Helper {
         } catch (IOException | URISyntaxException e) {
             e.printStackTrace();
         }
+    }
+
+    public static String getClipboardContents() {
+        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+        try {
+            String data = (String) clipboard.getData(DataFlavor.stringFlavor);
+            return data;
+        } catch (UnsupportedFlavorException | IOException e) {
+            return null;
+        }
+    }
+
+    public static void copyToClipboard(String text) {
+        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+        clipboard.setContents(new StringSelection(text), null);
     }
 
     /**

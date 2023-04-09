@@ -366,6 +366,7 @@ class Editor extends PComponent {
 
     private boolean parseCommandSlash(String motion) {
         // TODO - implement
+        return true;
     }
 
     // :, *, /, etc.
@@ -460,17 +461,18 @@ class Editor extends PComponent {
             case 'G':
                 cursor.y = content.size() - 1;
                 cursor.x = cursor.getEndOfLine();
+                return true;
             case 's':
                 cursor.deleteCurrentCharacter();
                 mode = Mode.INSERT;
                 fileSaved = false;
                 return true;
-            // case 'p':
-            // cursor.pasteAfter();
-            // return true;
-            // case 'P':
-            // cursor.pasteBefore();
-            // return true;
+            case 'p':
+                cursor.pasteAfter();
+                return true;
+            case 'P':
+                cursor.pasteBefore();
+                return true;
             case 'x':
                 cursor.deleteCurrentCharacter();
                 fileSaved = false;
