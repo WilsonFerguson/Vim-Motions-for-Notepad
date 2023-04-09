@@ -14,10 +14,6 @@ class Sketch extends Applet {
         setTitle("Vim Motions for Notepad");
         exitOnEscape(false);
 
-        createEditor();
-    }
-
-    public void createEditor() {
         editor = new Editor();
     }
 
