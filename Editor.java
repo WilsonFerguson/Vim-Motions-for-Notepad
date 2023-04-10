@@ -896,14 +896,6 @@ class Editor extends PComponent {
                     lineNumber = i + 1;
             }
 
-            // if (i == (activeCursors.get(0)).y)
-            // fill(currentLineColor);
-            // else
-            // fill(color.fromHSB(hue(textColor), saturation(textColor), brightness));
-
-            // text(lineNumber, 0, lineHeight / 2);
-            // translate(0, lineHeight);
-
             if (i == (activeCursors.get(0)).y) {
                 fill(currentLineColor);
                 textAlign(LEFT);
