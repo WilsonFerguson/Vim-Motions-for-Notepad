@@ -359,8 +359,9 @@ class Editor extends PComponent {
     }
 
     private boolean parseCommandStar(String motion) {
+        // Get the word at the cursor, set motion to "/word", return
+        // parseCommandSlash(motion)
         // TODO - implement
-        // Simply a redirection to select the current word and then slash it
         return true;
     }
 
