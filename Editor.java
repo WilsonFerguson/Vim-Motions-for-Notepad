@@ -332,7 +332,8 @@ class Editor extends PComponent {
         switch (motion) {
             case "w":
                 saveFile();
-                errorMessage = "File saved!";
+                if (file != null)
+                    errorMessage = "File saved!";
                 return true;
             case "wq":
                 saveFile();
@@ -903,7 +904,7 @@ class Editor extends PComponent {
             } else {
                 fill(color.fromHSB(hue(textColor), saturation(textColor), brightness));
                 textAlign(RIGHT);
-                text(lineNumber, -viewportOffset.x - 3, lineHeight / 2);
+                text(lineNumber, -viewportOffset.x - 4, lineHeight / 2);
             }
 
             translate(0, lineHeight);
@@ -931,7 +932,7 @@ class Editor extends PComponent {
 
         // Draw cursors
         // Toggle cursor visibility
-        if (millis() - lastBlink > cursorBlinkSpeed) {
+        if (cursorBlinkSpeed > 0 && millis() - lastBlink > cursorBlinkSpeed) {
             lastBlink = millis();
             for (Cursor cursor : activeCursors)
                 cursor.toggleVisibility();
