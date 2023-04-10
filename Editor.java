@@ -878,6 +878,55 @@ class Editor extends PComponent {
         }
     }
 
+    private void drawLineNumbers() {
+        if (!showLineNumbers)
+            return;
+
+        float brightness = brightness(textColor);
+        brightness *= 0.7;
+
+        push();
+        translate(viewportOffset.x, 0);
+
+        for (int i = 0; i < content.size(); i++) {
+            int lineNumber = i + 1;
+            if (relativeLineNumbers) {
+                lineNumber = abs((activeCursors.get(0).y - i));
+                if (i == (activeCursors.get(0)).y)
+                    lineNumber = i + 1;
+            }
+
+            // if (i == (activeCursors.get(0)).y)
+            // fill(currentLineColor);
+            // else
+            // fill(color.fromHSB(hue(textColor), saturation(textColor), brightness));
+
+            // text(lineNumber, 0, lineHeight / 2);
+            // translate(0, lineHeight);
+
+            if (i == (activeCursors.get(0)).y) {
+                fill(currentLineColor);
+                textAlign(LEFT);
+                text(lineNumber, 0, lineHeight / 2);
+            } else {
+                fill(color.fromHSB(hue(textColor), saturation(textColor), brightness));
+                textAlign(RIGHT);
+                text(lineNumber, -viewportOffset.x - 3, lineHeight / 2);
+            }
+
+            translate(0, lineHeight);
+        }
+        pop();
+
+        push();
+        translate(0, viewportOffset.y);
+        stroke(color.fromHSB(hue(textColor), saturation(textColor), brightness));
+        strokeWeight(1);
+        line(-3, 0, -3, height - bottomMargin);
+
+        pop();
+    }
+
     public void draw() {
         updateViewportOffset();
         translate(PVector.mult(viewportOffset, -1)); // -1 cause if the viewport is looking 300 down, we need to move
@@ -886,38 +935,7 @@ class Editor extends PComponent {
 
         background(backgroundColor);
 
-        // Line numbers
-        float brightness = brightness(textColor);
-        brightness *= 0.7;
-
-        if (showLineNumbers) {
-            push();
-            translate(viewportOffset.x, 0);
-            for (int i = 0; i < content.size(); i++) {
-                int lineNumber = i + 1;
-                if (relativeLineNumbers) {
-                    lineNumber = abs((activeCursors.get(0).y - i));
-                    if (i == (activeCursors.get(0)).y)
-                        lineNumber = i + 1;
-                }
-
-                if (i == (activeCursors.get(0)).y)
-                    fill(currentLineColor);
-                else
-                    fill(color.fromHSB(hue(textColor), saturation(textColor), brightness));
-
-                text(lineNumber, 0, lineHeight / 2);
-                translate(0, lineHeight);
-            }
-            pop();
-
-            push();
-            translate(0, viewportOffset.y);
-            stroke(color.fromHSB(hue(textColor), saturation(textColor), brightness));
-            strokeWeight(1);
-            line(-3, 0, -3, height - bottomMargin);
-            pop();
-        }
+        drawLineNumbers();
 
         // Draw cursors
         // Toggle cursor visibility
