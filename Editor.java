@@ -79,6 +79,8 @@ class Editor extends PComponent {
             defaultViewportOffset.x = -textWidth("000 ");
 
         viewportOffset = defaultViewportOffset.copy();
+
+        setTitle("Untitled");
     }
 
     private void readProperties() {

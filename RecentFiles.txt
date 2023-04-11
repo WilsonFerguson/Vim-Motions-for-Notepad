@@ -1,8 +1,7 @@
-F:\anothertest.txt
+F:\Downloads - HDD\test.txt
 F:\Downloads - HDD\processing amd library stuff.txt
 F:\Downloads - HDD\shortcuts.txt
 F:\Downloads - HDD\vim keybinds.txt
-F:\Downloads - HDD\test.txt
 F:\Downloads - HDD\skyblock buy list.txt
 F:\Downloads - HDD\ai stuff.txt
 F:\Downloads - HDD\planet crafter.txt
