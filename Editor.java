@@ -100,17 +100,14 @@ class Editor extends PComponent {
 
             showLineNumbers = bool(properties.getProperty("showLineNumbers"));
             relativeLineNumbers = bool(properties.getProperty("relativeLineNumbers"));
+
+            rectMode(CORNER);
         } catch (IOException e) {
         }
     }
 
     private void createCursor() {
         cursors.add(new Cursor());
-        cursors.get(cursors.size() - 1).setContent(content);
-    }
-
-    private void createCursor(int x, int y) {
-        cursors.add(new Cursor(x, y));
         cursors.get(cursors.size() - 1).setContent(content);
     }
 
@@ -299,7 +296,7 @@ class Editor extends PComponent {
 
             // Reset cursor
             cursors = new ArrayList<>();
-            cursors.add(new Cursor(0, 0));
+            createCursor();
             activeCursors = new ArrayList<>();
             activeCursors.add(cursors.get(0));
 
@@ -309,7 +306,7 @@ class Editor extends PComponent {
         }
     }
 
-    private void openExplorer() {
+    public void openExplorer() {
         // Option to open a file
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setDialogTitle("Open text file");
@@ -336,6 +333,10 @@ class Editor extends PComponent {
 
         String[] recentFiles = loadStrings("RecentFiles.txt");
         List<String> recentFilesList = new ArrayList<>(Arrays.asList(recentFiles));
+        // Check if file is already in the list, if so remove it
+        for (int i = recentFilesList.size() - 1; i >= 0; i--)
+            if (recentFilesList.get(i).equals(file.getAbsolutePath()))
+                recentFilesList.remove(i);
         recentFilesList.add(0, file.getAbsolutePath());
 
         Set<String> recentFilesSet = new HashSet<>();
@@ -352,6 +353,18 @@ class Editor extends PComponent {
         String[] recentFilesArray = new String[recentFilesList.size()];
         recentFilesList.toArray(recentFilesArray);
         saveStrings(recentFilesArray, "RecentFiles.txt");
+    }
+
+    public void setFile(File file) {
+        this.file = file;
+        String name = file.getName();
+        int index = name.lastIndexOf('.');
+        if (index > 0)
+            name = name.substring(0, index);
+        name = name.substring(0, 1).toUpperCase() + name.substring(1);
+        setTitle(name);
+        loadFileContents();
+        addToRecentFiles();
     }
 
     private boolean parseCommandColon(String motion) {
