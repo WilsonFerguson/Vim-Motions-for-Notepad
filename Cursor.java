@@ -13,17 +13,20 @@ public class Cursor extends PComponent implements EventIgnorer {
     int x;
     int y;
 
+    private Editor editor;
     private List<String> content;
 
     private boolean visible = true;
 
-    public Cursor(int x, int y) {
+    public Cursor(Editor editor, int x, int y) {
         this.x = x;
         this.y = y;
+        this.editor = editor;
+        content = editor.getContent();
     }
 
-    public Cursor() {
-        this(0, 0);
+    public Cursor(Editor editor) {
+        this(editor, 0, 0);
     }
 
     public void toggleVisibility() {
@@ -38,9 +41,9 @@ public class Cursor extends PComponent implements EventIgnorer {
         visible = false;
     }
 
-    public void setContent(List<String> content) {
-        this.content = content;
-    }
+    // public void setContent(List<String> content) {
+    // this.content = content;
+    // }
 
     public PVector getPosition() {
         return new PVector(x, y);
@@ -410,7 +413,7 @@ public class Cursor extends PComponent implements EventIgnorer {
     private boolean isEndOfLine() {
         if (content.get(y).length() == 0)
             return true;
-        return x == content.get(y).length() - 1;
+        return x == getEndOfLine();
     }
 
     private boolean isInLine() {
@@ -418,6 +421,10 @@ public class Cursor extends PComponent implements EventIgnorer {
     }
 
     public int getEndOfLine() {
+        // return max(content.get(y).length() - 1, 0);
+        if (editor.getMode() == Mode.INSERT)
+            return content.get(y).length();
+
         return max(content.get(y).length() - 1, 0);
     }
 
@@ -468,6 +475,7 @@ public class Cursor extends PComponent implements EventIgnorer {
     }
 
     public void draw(Mode mode) {
+        content = editor.getContent();
         clamp(mode);
 
         if (!visible)

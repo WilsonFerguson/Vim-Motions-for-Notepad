@@ -109,8 +109,16 @@ class Editor extends PComponent {
     }
 
     private void createCursor() {
-        cursors.add(new Cursor());
-        cursors.get(cursors.size() - 1).setContent(content);
+        cursors.add(new Cursor(this));
+        // cursors.get(cursors.size() - 1).setContent(content);
+    }
+
+    public List<String> getContent() {
+        return content;
+    }
+
+    public Mode getMode() {
+        return mode;
     }
 
     /**
@@ -154,16 +162,18 @@ class Editor extends PComponent {
                         continue;
 
                     if (x == 0) {
+                        int originalLength = content.get(y - 1).length();
                         content.set(y - 1, content.get(y - 1) + content.get(y));
                         content.remove(y);
                         cursor.y--;
-                        cursor.x = content.get(y - 1).length();
+                        cursor.x = originalLength;
                         return;
                     }
 
                     content.set(y, content.get(y).substring(0, x - 1) + content.get(y).substring(x));
                     cursor.x--;
                 }
+                fileSaved = false;
                 return;
             case "Enter":
                 for (Cursor cursor : activeCursors) {
@@ -439,12 +449,12 @@ class Editor extends PComponent {
                 cursor.right();
                 return true;
             case 'I':
-                cursor.findFirstNonWhitespace();
                 mode = Mode.INSERT;
+                cursor.findFirstNonWhitespace();
                 return true;
             case 'A':
-                cursor.findLastNonWhitespace();
                 mode = Mode.INSERT;
+                cursor.findLastNonWhitespace();
                 return true;
             case 'w':
                 cursor.nextWord();
@@ -721,8 +731,8 @@ class Editor extends PComponent {
             for (int i = 0; i < cursors.size(); i++) {
                 Cursor cursor = cursors.get(i);
                 if (isActive(cursor)) {
-                    Cursor newCursor = new Cursor(cursor.x, cursor.y);
-                    newCursor.setContent(content);
+                    Cursor newCursor = new Cursor(this, cursor.x, cursor.y);
+                    // newCursor.setContent(content);
                     cursors.add(i + 1, newCursor);
                 }
             }
@@ -733,8 +743,8 @@ class Editor extends PComponent {
                 Cursor cursor = cursors.get(i);
                 if (isActive(cursor)) {
                     cursor.x = 0; // Go to the beginning of the line
-                    Cursor newCursor = new Cursor(cursor.x, cursor.y);
-                    newCursor.setContent(content);
+                    Cursor newCursor = new Cursor(this, cursor.x, cursor.y);
+                    // newCursor.setContent(content);
                     newCursor.x = content.get(cursor.y).length(); // Go to the end of the line
                     cursors.add(i + 1, newCursor);
                 }
@@ -780,8 +790,8 @@ class Editor extends PComponent {
                 break;
         }
 
-        for (Cursor cursor : cursors)
-            cursor.setContent(content);
+        // for (Cursor cursor : cursors)
+        // cursor.setContent(content);
     }
 
     private void updateViewportOffset() {
@@ -888,8 +898,8 @@ class Editor extends PComponent {
                 end = cursors.get(i);
             }
 
-            Cursor cursor = new Cursor(start.x, start.y);
-            cursor.setContent(content);
+            Cursor cursor = new Cursor(this, start.x, start.y);
+            // cursor.setContent(content);
             // While it hasn't reached the end, add the character to the list and then move
             // it to the right
             while (!cursor.equals(end)) {
