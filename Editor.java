@@ -271,6 +271,7 @@ class Editor extends PComponent {
                     name = name.substring(0, index);
                 name = name.substring(0, 1).toUpperCase() + name.substring(1);
                 setTitle(name);
+                addToRecentFiles();
             } else {
                 return;
             }
@@ -325,7 +326,32 @@ class Editor extends PComponent {
             name = name.substring(0, 1).toUpperCase() + name.substring(1);
             setTitle(name);
             loadFileContents();
+            addToRecentFiles();
         }
+    }
+
+    private void addToRecentFiles() {
+        if (file == null)
+            return;
+
+        String[] recentFiles = loadStrings("RecentFiles.txt");
+        List<String> recentFilesList = new ArrayList<>(Arrays.asList(recentFiles));
+        recentFilesList.add(0, file.getAbsolutePath());
+
+        Set<String> recentFilesSet = new HashSet<>();
+        for (int i = recentFilesList.size() - 1; i >= 0; i--) {
+            if (recentFilesSet.contains(recentFilesList.get(i)))
+                recentFilesList.remove(i);
+            else
+                recentFilesSet.add(recentFilesList.get(i));
+        }
+
+        if (recentFilesList.size() > 9)
+            recentFilesList = recentFilesList.subList(0, 9);
+
+        String[] recentFilesArray = new String[recentFilesList.size()];
+        recentFilesList.toArray(recentFilesArray);
+        saveStrings(recentFilesArray, "RecentFiles.txt");
     }
 
     private boolean parseCommandColon(String motion) {
