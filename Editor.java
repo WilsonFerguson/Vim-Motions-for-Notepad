@@ -110,7 +110,6 @@ class Editor extends PComponent {
 
     private void createCursor() {
         cursors.add(new Cursor(this));
-        // cursors.get(cursors.size() - 1).setContent(content);
     }
 
     public List<String> getContent() {
@@ -732,7 +731,6 @@ class Editor extends PComponent {
                 Cursor cursor = cursors.get(i);
                 if (isActive(cursor)) {
                     Cursor newCursor = new Cursor(this, cursor.x, cursor.y);
-                    // newCursor.setContent(content);
                     cursors.add(i + 1, newCursor);
                 }
             }
@@ -744,7 +742,6 @@ class Editor extends PComponent {
                 if (isActive(cursor)) {
                     cursor.x = 0; // Go to the beginning of the line
                     Cursor newCursor = new Cursor(this, cursor.x, cursor.y);
-                    // newCursor.setContent(content);
                     newCursor.x = content.get(cursor.y).length(); // Go to the end of the line
                     cursors.add(i + 1, newCursor);
                 }
@@ -789,16 +786,12 @@ class Editor extends PComponent {
                 }
                 break;
         }
-
-        // for (Cursor cursor : cursors)
-        // cursor.setContent(content);
     }
 
     private void updateViewportOffset() {
         PVector cursorPos = activeCursors.get(0).getPos();
         // If cursorPos.y is less than the viewportOffset.y, then we need to move the
         // viewport up
-        // println(cursorPos.y, viewportOffset.y);
         if (cursorPos.y < viewportOffset.y) {
             viewportOffset.y = cursorPos.y;
         }
@@ -899,7 +892,6 @@ class Editor extends PComponent {
             }
 
             Cursor cursor = new Cursor(this, start.x, start.y);
-            // cursor.setContent(content);
             // While it hasn't reached the end, add the character to the list and then move
             // it to the right
             while (!cursor.equals(end)) {
