@@ -881,28 +881,33 @@ class Editor extends PComponent {
     }
 
     private void drawContent() {
-        fill(textColor);
-        List<PVector> selectedCharacters = getSelectedCharacters();
         PVector position = PVector.zero();
 
         float spaceWidth = textWidth(" ");
         float charWidth = textWidth("A");
 
         // Highlight the selected characters
+        List<PVector> selectedCharacters = getSelectedCharacters();
+        fill(highlightColor);
         for (PVector selectedCharacter : selectedCharacters) {
             // If selected character is below the viewport, ignore it
             if (selectedCharacter.y > viewportOffset.y + height - bottomMargin)
                 continue;
 
-            fill(highlightColor);
             float rectSize = charWidth;
             if (content.get((int) selectedCharacter.y).charAt((int) selectedCharacter.x) == '\t')
                 rectSize = tabSize * spaceWidth;
             rect(selectedCharacter.x * charWidth, selectedCharacter.y * lineHeight, rectSize, lineHeight);
-            fill(textColor);
+        }
+
+        // Draw cursors
+        fill(cursorColor);
+        for (Cursor cursor : cursors) {
+            cursor.draw(mode);
         }
 
         // Draw the content line by line
+        fill(textColor);
         for (String line : content) {
             // If position is below the viewport, stop drawing
             if (position.y > viewportOffset.y + height - bottomMargin)
@@ -983,15 +988,13 @@ class Editor extends PComponent {
 
     public void draw() {
         updateViewportOffset();
+        background(backgroundColor);
         translate(PVector.mult(viewportOffset, -1)); // -1 cause if the viewport is looking 300 down, we need to move
                                                      // the content up 300
         updateCursors();
 
-        background(backgroundColor);
-
         drawLineNumbers();
 
-        // Draw cursors
         // Toggle cursor visibility
         if (cursorBlinkSpeed > 0 && millis() - lastBlink > cursorBlinkSpeed) {
             lastBlink = millis();
@@ -999,13 +1002,7 @@ class Editor extends PComponent {
                 cursor.toggleVisibility();
         }
 
-        fill(cursorColor);
-        for (Cursor cursor : cursors) {
-            cursor.draw(mode);
-        }
-
         drawContent();
-
         drawInformationSection();
     }
 }
