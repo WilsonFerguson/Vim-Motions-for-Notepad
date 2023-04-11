@@ -780,7 +780,7 @@ class Editor extends PComponent {
 
         fill(backgroundColor);
         rect(0, height - bottomMargin, width, bottomMargin);
-        fill(255, 35);
+        fill(255, 20);
         rect(0, height - bottomMargin, width, lineHeight);
 
         translate(0, height - bottomMargin + lineHeight / 2);
@@ -880,6 +880,56 @@ class Editor extends PComponent {
         }
     }
 
+    private void drawContent() {
+        fill(textColor);
+        List<PVector> selectedCharacters = getSelectedCharacters();
+        PVector position = PVector.zero();
+
+        float spaceWidth = textWidth(" ");
+        float charWidth = textWidth("A");
+
+        // Highlight the selected characters
+        for (PVector selectedCharacter : selectedCharacters) {
+            // If selected character is below the viewport, ignore it
+            if (selectedCharacter.y > viewportOffset.y + height - bottomMargin)
+                continue;
+
+            fill(highlightColor);
+            float rectSize = charWidth;
+            if (content.get((int) selectedCharacter.y).charAt((int) selectedCharacter.x) == '\t')
+                rectSize = tabSize * spaceWidth;
+            rect(selectedCharacter.x * charWidth, selectedCharacter.y * lineHeight, rectSize, lineHeight);
+            fill(textColor);
+        }
+
+        // Draw the content line by line
+        for (String line : content) {
+            // If position is below the viewport, stop drawing
+            if (position.y > viewportOffset.y + height - bottomMargin)
+                break;
+
+            // Handle tabs
+            if (line.contains("\t")) {
+                String[] words = line.split("\t");
+                float x = position.x;
+                for (int i = 0; i < words.length; i++) {
+                    String word = words[i];
+                    text(word, x, position.y + lineHeight / 2);
+                    x += textWidth(word);
+                    if (i != words.length - 1) {
+                        text(" ", x, position.y + lineHeight / 2);
+                        x += spaceWidth * tabSize;
+                    }
+                }
+            } else {
+                text(line, position.x, position.y + lineHeight / 2);
+            }
+
+            // Move to the next line
+            position.y += lineHeight;
+        }
+    }
+
     private void drawLineNumbers() {
         if (!showLineNumbers)
             return;
@@ -916,7 +966,7 @@ class Editor extends PComponent {
         translate(0, viewportOffset.y);
         stroke(color.fromHSB(hue(textColor), saturation(textColor), brightness));
         strokeWeight(1);
-        line(-3, 0, -3, height - bottomMargin);
+        line(-1, 0, -1, height - bottomMargin);
 
         pop();
     }
@@ -944,34 +994,7 @@ class Editor extends PComponent {
             cursor.draw(mode);
         }
 
-        // Draw text
-        fill(textColor);
-        push();
-        List<PVector> selectedCharacters = getSelectedCharacters();
-        for (int i = 0; i < content.size(); i++) {
-            push();
-            String line = content.get(i);
-            for (int j = 0; j < line.length(); j++) {
-                char c = line.charAt(j);
-                if (selectedCharacters.contains(new PVector(j, i))) {
-                    fill(highlightColor);
-                    float rectSize = textWidth(c + "");
-                    if (c == '\t')
-                        rectSize = tabSize * textWidth(" ");
-                    rect(0, 0, rectSize, lineHeight);
-                    fill(textColor);
-                }
-                if (c == '\t') {
-                    translate(tabSize * textWidth(" "), 0);
-                } else {
-                    text(c, 0, lineHeight / 2);
-                    translate(textWidth(c + ""), 0);
-                }
-            }
-            pop();
-            translate(0, lineHeight);
-        }
-        pop();
+        drawContent();
 
         drawInformationSection();
     }
