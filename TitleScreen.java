@@ -16,7 +16,6 @@ public class TitleScreen extends PComponent {
             properties.load(getClass().getClassLoader().getResourceAsStream("settings.properties"));
             backgroundColor = color(properties.getProperty("backgroundColor"));
             textColor = color(properties.getProperty("textColor"));
-            textSize(parseInt(properties.getProperty("fontSize")));
             textFont(properties.getProperty("fontFamily"));
         } catch (Exception e) {
             e.printStackTrace();
@@ -59,7 +58,9 @@ public class TitleScreen extends PComponent {
         noStroke();
         fill(150);
         textAlign(LEFT);
-        text(index + 1, x - w / 2 + 4, y - h / 2 + 13);
+        float numberX = x - w / 2 + textWidth("1") / 2.5f;
+        float numberY = y - h / 2 + textHeight("1") / 2;
+        text(index + 1, numberX, numberY);
 
         fill(textColor);
         textAlign(CENTER);
@@ -96,6 +97,7 @@ public class TitleScreen extends PComponent {
 
     public void draw() {
         background(backgroundColor);
+        textSize(0.065 * width / 4);
 
         fill(textColor);
         rectMode(CENTER);
