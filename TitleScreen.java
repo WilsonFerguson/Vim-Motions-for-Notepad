@@ -10,6 +10,9 @@ public class TitleScreen extends PComponent {
 
     private String[] recentFiles;
 
+    // Keyboard inputs
+    private String motion = "";
+
     public TitleScreen() {
         Properties properties = new Properties();
         try {
@@ -41,8 +44,7 @@ public class TitleScreen extends PComponent {
         float w = width / 4;
         float h = w / 3;
 
-        // float x = (index % 3 + 1) * (width / 4);
-        // float y = (index / 3 + 1) * (height / 4);
+        // Calculate the position of the button thing
         float xLeft = width / 8 + w / 4;
         float xRight = width - xLeft;
         float yTop = height / 8 + h / 4;
@@ -50,11 +52,13 @@ public class TitleScreen extends PComponent {
         float x = map(index % 3, 0, 2, xLeft, xRight);
         float y = map(index / 3, 0, 2, yTop, yBottom);
 
+        // Draw the outline
         stroke(textColor);
         strokeWeight(1.5);
         noFill();
         rect(x, y, w, h, 10);
 
+        // Draw the number
         noStroke();
         fill(150);
         textAlign(LEFT);
@@ -62,9 +66,11 @@ public class TitleScreen extends PComponent {
         float numberY = y - h / 2 + textHeight("1") / 2;
         text(index + 1, numberX, numberY);
 
+        // Draw the filename
         fill(textColor);
         textAlign(CENTER);
 
+        // Only show the name of the file, not the path and shorten it if it's too long
         String filename = file.substring(file.lastIndexOf(File.separator) + 1);
         filename = filename.substring(0, filename.lastIndexOf("."));
         float maxChars = w / textWidth("a");
@@ -80,17 +86,20 @@ public class TitleScreen extends PComponent {
         float commandWidth = textWidth(command + "") * 2.5f;
         float totalWidth = textWidth(text) + margin + commandWidth;
 
+        // Draw outline
         noFill();
         stroke(textColor);
         strokeWeight(1.5);
         float commandX = x - totalWidth / 2 + commandWidth / 2;
         rect(commandX, y, commandWidth, commandWidth, 10);
 
+        // Draw command letter
         fill(textColor);
         textAlign(CENTER);
         noStroke();
         text(command, commandX, y);
 
+        // Draw command description
         textAlign(LEFT);
         text(text, commandX + commandWidth / 2 + margin, y);
     }
@@ -110,21 +119,74 @@ public class TitleScreen extends PComponent {
     }
 
     public void keyPressed() {
-        switch (key) {
-            case 't':
+        if (keyString.equals("Backspace")) {
+            if (motion.length() > 0)
+                motion = motion.substring(0, motion.length() - 1);
+            return;
+        }
+        if (keyString.length() > 1 && !keyString.equals("Semicolon"))
+            return;
+
+        motion += Character.toLowerCase(key);
+        calculateMotion();
+    }
+
+    private boolean handleNumber() {
+        if (motion.length() != 1)
+            return false;
+
+        char key = motion.charAt(0);
+        if (key < '1' || key > '9')
+            return false;
+
+        int index = key - '1';
+        if (index < recentFiles.length) {
+            state = recentFiles[index];
+        }
+        motion = "";
+        return true;
+    }
+
+    private void handleCommand() {
+        if (!motion.startsWith(":") || motion.length() < 2)
+            return;
+
+        motion = motion.substring(1);
+
+        switch (motion) {
+            case "q":
+                exit();
+                break;
+            case "wq":
+                exit();
+                break;
+            case "q!":
+                exit();
+                break;
+            case "qa":
+                exit();
+                break;
+        }
+    }
+
+    private void calculateMotion() {
+        switch (motion) {
+            case "t":
                 state = "new";
                 break;
-            case 'e':
+            case "n":
+                state = "new";
+                break;
+            case "e":
+                state = "open";
+                break;
+            case "o":
                 state = "open";
                 break;
             default:
-                if (key >= '1' && key <= '9') {
-                    int index = key - '1';
-                    if (index < recentFiles.length) {
-                        state = recentFiles[index];
-                    }
-                }
-                break;
+                if (handleNumber())
+                    break;
+                handleCommand();
         }
     }
 
