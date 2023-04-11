@@ -941,6 +941,12 @@ class Editor extends PComponent {
         translate(viewportOffset.x, 0);
 
         for (int i = 0; i < content.size(); i++) {
+            // If above the viewport, skip it
+            if (getTranslation().y < -lineHeight) {
+                translate(0, lineHeight);
+                continue;
+            }
+
             int lineNumber = i + 1;
             if (relativeLineNumbers) {
                 lineNumber = abs((activeCursors.get(0).y - i));
@@ -959,6 +965,10 @@ class Editor extends PComponent {
             }
 
             translate(0, lineHeight);
+
+            // If below the viewport, stop drawing
+            if (getTranslation().y > height - bottomMargin)
+                break;
         }
         pop();
 
