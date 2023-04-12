@@ -147,26 +147,54 @@ public class TitleScreen extends PComponent {
         return true;
     }
 
-    private void handleCommand() {
+    private boolean handleCommand() {
         if (!motion.startsWith(":") || motion.length() < 2)
-            return;
+            return false;
 
         motion = motion.substring(1);
 
         switch (motion) {
             case "q":
                 exit();
-                break;
+                return true;
             case "wq":
                 exit();
-                break;
+                return true;
             case "q!":
                 exit();
-                break;
+                return true;
             case "qa":
                 exit();
-                break;
+                return true;
         }
+
+        return false;
+    }
+
+    private void handleDeletion() {
+        if (!motion.startsWith("d") || motion.length() < 2)
+            return;
+
+        motion = motion.substring(1);
+        int index = parseInt(motion) - 1;
+        if (index < 0 || index >= recentFiles.length)
+            return;
+
+        // Delete the file
+        File file = new File(recentFiles[index]);
+        file.delete();
+
+        // Remove the file from the list
+        List<String> files = new ArrayList<String>();
+        for (int i = 0; i < recentFiles.length; i++) {
+            if (i != index)
+                files.add(recentFiles[i]);
+        }
+
+        recentFiles = files.toArray(new String[files.size()]);
+        saveStrings(recentFiles, "RecentFiles.txt");
+
+        motion = "";
     }
 
     private void calculateMotion() {
@@ -186,7 +214,10 @@ public class TitleScreen extends PComponent {
             default:
                 if (handleNumber())
                     break;
-                handleCommand();
+                if (handleCommand())
+                    break;
+                handleDeletion();
+
         }
     }
 
