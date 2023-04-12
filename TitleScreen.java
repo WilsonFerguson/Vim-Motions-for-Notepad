@@ -114,8 +114,9 @@ public class TitleScreen extends PComponent {
             drawRecentFile(recentFiles[i], i);
         }
 
-        drawCommand("New file", 't', width / 3, height / 2 + height / 4);
-        drawCommand("Open file", 'e', width * 2 / 3, height / 2 + height / 4);
+        drawCommand("New file", 't', width / 4, height / 2 + height / 4);
+        drawCommand("Open file", 'e', width / 2, height / 2 + height / 4);
+        drawCommand("Delete file", 'd', width * 3 / 4, height / 2 + height / 4);
     }
 
     public void keyPressed() {
