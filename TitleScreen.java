@@ -117,12 +117,22 @@ public class TitleScreen extends PComponent {
         drawCommand("New file", 't', width / 4, height / 2 + height / 4);
         drawCommand("Open file", 'e', width / 2, height / 2 + height / 4);
         drawCommand("Delete file", 'd', width * 3 / 4, height / 2 + height / 4);
+
+        // Draw the motion
+        textAlign(LEFT);
+        fill(textColor);
+        // text(motion, 0, height - textHeight("a"));
+        text(motion, 0, height - textHeight(motion) * 2);
     }
 
     public void keyPressed() {
         if (keyString.equals("Backspace")) {
             if (motion.length() > 0)
                 motion = motion.substring(0, motion.length() - 1);
+            return;
+        }
+        if (keyString.equals("Escape")) {
+            motion = "";
             return;
         }
         if (keyString.length() > 1 && !keyString.equals("Semicolon"))
@@ -152,9 +162,9 @@ public class TitleScreen extends PComponent {
         if (!motion.startsWith(":") || motion.length() < 2)
             return false;
 
-        motion = motion.substring(1);
+        String newMotion = motion.substring(1);
 
-        switch (motion) {
+        switch (newMotion) {
             case "q":
                 exit();
                 return true;
