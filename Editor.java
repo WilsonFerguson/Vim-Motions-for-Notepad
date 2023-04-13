@@ -792,9 +792,9 @@ class Editor extends PComponent {
         if (file != null) {
             filePath = file.getAbsolutePath();
 
-            if (!fileSaved)
-                filePath += " [+]";
         }
+        if (!fileSaved)
+            filePath += " [+]";
 
         fill(backgroundColor);
         rect(0, height - bottomMargin, width, bottomMargin);
