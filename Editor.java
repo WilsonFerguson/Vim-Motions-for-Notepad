@@ -879,8 +879,6 @@ class Editor extends PComponent {
 
             float rectSize = charWidth + 1;
             String line = content.get((int) selectedCharacter.y);
-            // if (content.get((int) selectedCharacter.y).charAt((int) selectedCharacter.x)
-            // == '\t')
             if (line.length() > selectedCharacter.x && line.charAt((int) selectedCharacter.x) == '\t')
                 rectSize = tabSize * spaceWidth;
             rect(selectedCharacter.x * charWidth, selectedCharacter.y * lineHeight, rectSize, lineHeight + 1);
