@@ -126,6 +126,10 @@ public class TitleScreen extends PComponent {
     }
 
     public void keyPressed() {
+        // Make sure the title screen is active
+        if (state.length() > 0)
+            return;
+
         if (keyString.equals("Backspace")) {
             if (motion.length() > 0)
                 motion = motion.substring(0, motion.length() - 1);
@@ -215,6 +219,9 @@ public class TitleScreen extends PComponent {
                 break;
             case "n":
                 state = "new";
+                break;
+            case "i":
+                state = "new insert";
                 break;
             case "e":
                 state = "open";

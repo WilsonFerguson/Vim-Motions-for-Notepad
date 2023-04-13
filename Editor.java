@@ -754,6 +754,14 @@ class Editor extends PComponent {
         }
     }
 
+    // TODO - this is quite a hacky way to do this
+    public void mimicKeyPress(char key) {
+        char previousKey = this.key;
+        PComponent.key = key;
+        keyPressed();
+        PComponent.key = previousKey;
+    }
+
     private void updateViewportOffset() {
         PVector cursorPos = cursor.getPos();
         // If cursorPos.y is less than the viewportOffset.y, then we need to move the
