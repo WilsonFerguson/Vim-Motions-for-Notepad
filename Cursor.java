@@ -41,14 +41,6 @@ public class Cursor extends PComponent implements EventIgnorer {
         visible = false;
     }
 
-    // public void setContent(List<String> content) {
-    // this.content = content;
-    // }
-
-    public PVector getPosition() {
-        return new PVector(x, y);
-    }
-
     public void left() {
         if (x == 0 && y == 0)
             return;
@@ -474,6 +466,10 @@ public class Cursor extends PComponent implements EventIgnorer {
         return getTextPosition(x, y);
     }
 
+    public PVector toPVector() {
+        return new PVector(x, y);
+    }
+
     public void draw(Mode mode) {
         content = editor.getContent();
         clamp(mode);
@@ -503,5 +499,9 @@ public class Cursor extends PComponent implements EventIgnorer {
 
     public boolean equals(Cursor cursor) {
         return cursor.x == x && cursor.y == y;
+    }
+
+    public Cursor copy() {
+        return new Cursor(editor, x, y);
     }
 }
