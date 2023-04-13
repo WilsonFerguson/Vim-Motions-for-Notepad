@@ -366,7 +366,9 @@ class Editor extends PComponent {
                 return true;
             case "wq":
                 saveFile();
-                exit();
+                // Only exit the program if they actually saved the file
+                if (fileSaved)
+                    exit();
                 return true;
             case "q":
                 if (!fileSaved) {
@@ -378,7 +380,7 @@ class Editor extends PComponent {
                 return true;
             case "q!":
                 exit();
-                return true;
+
             case "E":
                 openExplorer();
                 return true;
