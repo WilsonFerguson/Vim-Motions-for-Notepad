@@ -375,11 +375,8 @@ class Editor extends PComponent {
             case "wq":
                 saveFile();
                 // Only exit the program if they actually saved the file
-                if (fileSaved) {
+                if (fileSaved)
                     sketch.setState(0);
-                    return true;
-                }
-
                 return true;
             case "q":
                 if (!fileSaved) {
