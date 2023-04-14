@@ -110,6 +110,13 @@ public class Applet extends JPanel implements PConstants, Runnable {
     private MouseHandler mouseHandler = new MouseHandler(this);
     private WindowHandler windowHandler = new WindowHandler(this);
 
+    public static void fixWindowsScaling() {
+        // System.setProperty("sun.java2d.uiScale", "1.0");
+        if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+            System.setProperty("sun.java2d.uiScale", "1.0");
+        }
+    }
+
     public void startApplet() {
         PComponent.applet = this;
 

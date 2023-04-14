@@ -25,16 +25,6 @@ class Sketch extends Applet {
             title.draw();
             if (title.getState().length() != 0) {
                 String state = title.getState();
-                // if (state.equals("new")) {
-                // editor = new Editor();
-                // } else if (state.equals("open")) {
-                // editor = new Editor();
-                // editor.openExplorer();
-                // } else {
-                // File file = new File(state);
-                // editor = new Editor();
-                // editor.setFile(file);
-                // }
                 switch (state) {
                     case "new":
                         editor = new Editor();
