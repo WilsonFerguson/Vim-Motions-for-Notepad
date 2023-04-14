@@ -869,7 +869,7 @@ class Editor extends PComponent {
         text(percentage, width - textWidth(percentage) / 2, 0);
         textAlign(TextAlignment.LEFT);
 
-        translate(0, lineHeight - 3);
+        translate(0, lineHeight);
         if (errorMessage.length() > 0) {
             text(errorMessage, 5, 0);
         } else {
