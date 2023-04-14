@@ -109,9 +109,23 @@ public class TitleScreen extends PComponent {
             drawRecentFile(recentFiles[i], i);
         }
 
-        drawCommand("New file", 't', width / 4, height / 2 + height / 4);
-        drawCommand("Open file", 'e', width / 2, height / 2 + height / 4);
-        drawCommand("Delete file", 'd', width * 3 / 4, height / 2 + height / 4);
+        // drawCommand("New file", 't', width / 4, height / 2 + height / 4);
+        // drawCommand("Open file", 'e', width / 2, height / 2 + height / 4);
+        // drawCommand("Delete file", 'd', width * 3 / 4, height / 2 + height / 4);
+        float y = height / 2 + height / 4;
+        HashMap<String, Character> commands = new HashMap<>();
+        commands.put("New file", 't');
+        commands.put("Open file", 'e');
+        commands.put("Delete file", 'd');
+        commands.put("Remove file", 'r');
+
+        int i = 0;
+        float margin = width / 6;
+        for (String command : commands.keySet()) {
+            float x = map(i, 0, commands.size() - 1, margin, width - margin);
+            drawCommand(command, commands.get(command), x, y);
+            i++;
+        }
 
         // Draw the motion
         textAlign(LEFT);
@@ -180,14 +194,14 @@ public class TitleScreen extends PComponent {
         return false;
     }
 
-    private void handleDeletion() {
+    private boolean handleDeletion() {
         if (!motion.startsWith("d") || motion.length() < 2)
-            return;
+            return false;
 
         motion = motion.substring(1);
         int index = parseInt(motion) - 1;
         if (index < 0 || index >= recentFiles.length)
-            return;
+            return false;
 
         // Delete the file
         File file = new File(recentFiles[index]);
@@ -204,6 +218,30 @@ public class TitleScreen extends PComponent {
         saveStrings(recentFiles, "RecentFiles.txt");
 
         motion = "";
+        return true;
+    }
+
+    private boolean handleRemove() {
+        if (!motion.startsWith("r") || motion.length() < 2)
+            return false;
+
+        motion = motion.substring(1);
+        int index = parseInt(motion) - 1;
+        if (index < 0 || index >= recentFiles.length)
+            return false;
+
+        // Remove the file from the list
+        ArrayList<String> files = new ArrayList<>();
+        for (int i = 0; i < recentFiles.length; i++) {
+            if (i != index)
+                files.add(recentFiles[i]);
+        }
+
+        recentFiles = files.toArray(new String[files.size()]);
+        saveStrings(recentFiles, "RecentFiles.txt");
+
+        motion = "";
+        return true;
     }
 
     private void calculateMotion() {
@@ -228,8 +266,12 @@ public class TitleScreen extends PComponent {
                     break;
                 if (handleCommand())
                     break;
-                handleDeletion();
+                if (handleDeletion())
+                    break;
+                if (handleRemove())
+                    break;
 
+                break;
         }
     }
 
