@@ -41,7 +41,11 @@ class Sketch extends Applet {
                         break;
                     case "open":
                         editor = new Editor();
-                        editor.openExplorer();
+                        if (!editor.openExplorer()) {
+                            editor = null;
+                            title = new TitleScreen();
+                            return;
+                        }
                         break;
                     default:
                         File file = new File(state);

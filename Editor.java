@@ -297,7 +297,7 @@ class Editor extends PComponent {
         }
     }
 
-    public void openExplorer() {
+    public boolean openExplorer() {
         // Option to open a file
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setDialogTitle("Open text file");
@@ -315,7 +315,10 @@ class Editor extends PComponent {
             setTitle(name);
             loadFileContents();
             addToRecentFiles();
+            return true;
         }
+
+        return false;
     }
 
     private void addToRecentFiles() {
