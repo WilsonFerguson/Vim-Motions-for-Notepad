@@ -5,8 +5,10 @@ import library.core.*;
 
 class Sketch extends Applet {
 
-    TitleScreen title;
-    Editor editor;
+    private TitleScreen title;
+    private Editor editor;
+
+    private int state = 0;
 
     public void setup() {
         LinkedHashMap<String, String> properties = loadProperties("settings.properties");
@@ -27,20 +29,26 @@ class Sketch extends Applet {
     }
 
     public void draw() {
-        if (title != null) {
+        if (state == 0) {
+            // Title screen
             title.draw();
+
+            if (editor != null) {
+                editor = null;
+            }
+
             if (title.getState().length() != 0) {
-                String state = title.getState();
-                switch (state) {
+                String titleState = title.getState();
+                switch (titleState) {
                     case "new":
-                        editor = new Editor();
+                        editor = new Editor(this);
                         break;
                     case "new insert":
-                        editor = new Editor();
+                        editor = new Editor(this);
                         editor.mimicKeyPress('i');
                         break;
                     case "open":
-                        editor = new Editor();
+                        editor = new Editor(this);
                         if (!editor.openExplorer()) {
                             editor = null;
                             title = new TitleScreen();
@@ -48,16 +56,27 @@ class Sketch extends Applet {
                         }
                         break;
                     default:
-                        File file = new File(state);
-                        editor = new Editor();
+                        File file = new File(titleState);
+                        editor = new Editor(this);
                         editor.setFile(file);
                         break;
                 }
-                title = null;
+                state = 1;
             }
-        }
-        if (editor != null)
+        } else if (state == 1) {
             editor.draw();
+        }
+    }
+
+    public void setState(int state) {
+        this.state = state;
+        if (state == 0) {
+            title = new TitleScreen();
+            editor = null;
+        } else if (state == 1) {
+            editor = new Editor(this);
+            title = null;
+        }
     }
 
     public void onExit() {

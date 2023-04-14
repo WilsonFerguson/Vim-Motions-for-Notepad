@@ -7,6 +7,8 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import library.core.*;
 
 class Editor extends PComponent {
+    private Sketch sketch;
+
     private List<String> content;
 
     private File file;
@@ -53,7 +55,9 @@ class Editor extends PComponent {
             'G', 's', 'p', 'P', 'x', 'o', 'O' };
     private char[] commands = { ':', '/', '?', '*' }; // TODO - add others?
 
-    public Editor() {
+    public Editor(Sketch sketch) {
+        this.sketch = sketch;
+
         content = new ArrayList<>();
         content.add("");
 
@@ -371,8 +375,11 @@ class Editor extends PComponent {
             case "wq":
                 saveFile();
                 // Only exit the program if they actually saved the file
-                if (fileSaved)
-                    exit();
+                if (fileSaved) {
+                    sketch.setState(0);
+                    return true;
+                }
+
                 return true;
             case "q":
                 if (!fileSaved) {
@@ -380,11 +387,29 @@ class Editor extends PComponent {
                     return true; // Remove the motion
                 }
 
-                exit();
+                sketch.setState(0);
                 return true;
             case "q!":
-                exit();
+                sketch.setState(0);
+                return true;
+            case "wqa":
+                saveFile();
+                // Only exit the program if they actually saved the file
+                if (fileSaved)
+                    exit();
 
+                return true;
+            case "qa":
+                if (!fileSaved) {
+                    errorMessage = "Error: File not saved (press a command or enter to continue)";
+                    return true; // Remove the motion
+                }
+
+                exit();
+                return true;
+            case "qa!":
+                exit();
+                return true;
             case "E":
                 openExplorer();
                 return true;
