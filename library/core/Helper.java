@@ -2,7 +2,9 @@ package library.core;
 
 import java.awt.event.KeyEvent;
 import java.io.*;
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URL;
 import java.net.URISyntaxException;
 import java.util.*;
 import java.awt.*;
@@ -371,6 +373,23 @@ public class Helper {
             Desktop.getDesktop().browse(new URI(url));
         } catch (IOException | URISyntaxException e) {
             e.printStackTrace();
+        }
+    }
+
+    /**
+     * Returns true if the given {@code String} is a valid URL.<br>
+     * <br>
+     * Note: this does not check if the URL actually exists.
+     * 
+     * @param url
+     * @return
+     */
+    public static boolean isValidURL(String url) {
+        try {
+            new URL(url).toURI();
+            return true;
+        } catch (URISyntaxException | MalformedURLException e) {
+            return false;
         }
     }
 

@@ -447,6 +447,35 @@ public class Cursor extends PComponent implements EventIgnorer {
         return x > other.x;
     }
 
+    public String getWordWithPunctuation() {
+        if (getCharType(x, y) == CharType.SPACE)
+            return "";
+
+        Cursor position = copy(); // Save the position of the cursor to restore it later
+
+        // Move to the start of the word
+        if (x > 0) {
+            if (getCharType(x - 1, y) != CharType.SPACE) {
+                previousWordWithPunctuation();
+            }
+        }
+
+        // Find index of next space
+        int nextSpace = content.get(y).indexOf(' ', x);
+        if (nextSpace == -1)
+            nextSpace = content.get(y).length();
+
+        String word = content.get(y).substring(x, nextSpace);
+        x = position.x;
+        y = position.y;
+        return word;
+    }
+
+    public boolean isOnLink() {
+        String word = getWordWithPunctuation();
+        return isValidURL(word);
+    }
+
     private PVector getTextPosition(int x, int y) {
         float textHeight = textAscent() + textDescent();
         float yPosition = textHeight * y - textHeight("A") / 8; // Idk why it's 8, but it works

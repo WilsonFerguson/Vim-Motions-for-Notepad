@@ -32,7 +32,7 @@ class Editor extends PComponent {
     private boolean relativeLineNumbers = true;
 
     // Properties
-    private color backgroundColor, textColor, currentLineColor, cursorColor, highlightColor;
+    private color backgroundColor, textColor, currentLineColor, cursorColor, highlightColor, linkColor;
     private int fontSize = 20;
     private String fontFamily = "Arial";
     private int tabSize = 4;
@@ -92,6 +92,7 @@ class Editor extends PComponent {
             currentLineColor = color(properties.getProperty("currentLineColor"));
             cursorColor = color(properties.getProperty("cursorColor"));
             highlightColor = color(properties.getProperty("highlightColor"));
+            linkColor = color(properties.getProperty("linkColor"));
 
             fontSize = parseInt(properties.getProperty("fontSize"));
             fontFamily = properties.getProperty("fontFamily");
@@ -677,19 +678,29 @@ class Editor extends PComponent {
             }
             return true;
         }
-        if (errorMessage.length() > 0 && keyString.equals("Enter")) {
-            errorMessage = "";
-            return true;
-        }
-        if (motion.length() > 0 && keyString.equals("Enter")) {
-            if (isCommand(motion.charAt(0))) {
-                if (parseCommand())
-                    motion = "";
+        if (keyString.equals("Enter")) {
+            if (errorMessage.length() > 0) {
+                errorMessage = "";
+                return true;
+            }
+            if (motion.length() > 0) {
+                if (isCommand(motion.charAt(0))) {
+                    if (parseCommand())
+                        motion = "";
+                    return true;
+                }
+            } else {
+                if (cursor.isOnLink()) {
+                    String link = cursor.getWordWithPunctuation();
+                    openInBrowser(link);
+                } else {
+                    cursor.down();
+                }
                 return true;
             }
         }
 
-        String[] keysToIgnore = { "Shift", "Enter", "Tab", "Backspace", "Delete", "Control", "Alt", "Caps Lock" };
+        String[] keysToIgnore = { "Shift", "Tab", "Backspace", "Delete", "Control", "Alt", "Caps Lock" };
         for (String key : keysToIgnore) {
             if (keyString.equals(key))
                 return false;
@@ -907,8 +918,56 @@ class Editor extends PComponent {
         return selectedCharacters;
     }
 
+    private float drawSequence(String sequence, float x, float y) {
+        String[] words = sequence.split(" ");
+        ArrayList<String> sequences = new ArrayList<>();
+        String currentSequence = "";
+        for (int i = 0; i < words.length; i++) {
+            String word = words[i];
+            if (isValidURL(word)) {
+                sequences.add(currentSequence);
+                if (i != words.length - 1)
+                    sequences.add(word + " ");
+                else
+                    sequences.add(word);
+                currentSequence = "";
+            } else {
+                currentSequence += word;
+                if (i != words.length - 1)
+                    currentSequence += " ";
+            }
+        }
+        if (currentSequence.length() > 0)
+            sequences.add(currentSequence);
+
+        for (String s : sequences) {
+            if (isValidURL(s)) {
+                // Draw word
+                fill(linkColor);
+                text(s, x, y);
+
+                // Draw underline
+                stroke(linkColor);
+                strokeWeight(1);
+                float w = textWidth(s);
+                float lineY = y + lineHeight / 2 - 2;
+                line(x, lineY, x + w, lineY);
+                noStroke();
+
+                x += w;
+            } else {
+                fill(textColor);
+                text(s, x, y);
+                x += textWidth(s);
+            }
+        }
+
+        return x;
+    }
+
     private void drawContent() {
         PVector position = PVector.zero();
+        position.y += lineHeight / 2;
 
         float spaceWidth = textWidth(" ");
         float charWidth = textWidth("A");
@@ -935,25 +994,23 @@ class Editor extends PComponent {
         // Draw the content line by line
         fill(textColor);
         for (String line : content) {
+
             // If position is below the viewport, stop drawing
             if (position.y > viewportOffset.y + height - bottomMargin)
                 break;
 
             // Handle tabs
             if (line.contains("\t")) {
-                String[] words = line.split("\t");
+                // Split the line into an array, separated by tabs
+                String[] sequences = line.split("\t");
                 float x = position.x;
-                for (int i = 0; i < words.length; i++) {
-                    String word = words[i];
-                    text(word, x, position.y + lineHeight / 2);
-                    x += textWidth(word);
-                    if (i != words.length - 1) {
-                        text(" ", x, position.y + lineHeight / 2);
-                        x += spaceWidth * tabSize;
-                    }
+                float y = position.y;
+                for (String sequence : sequences) {
+                    x += drawSequence(sequence, x, y);
+                    x += spaceWidth * tabSize;
                 }
             } else {
-                text(line, position.x, position.y + lineHeight / 2);
+                drawSequence(line, position.x, position.y);
             }
 
             // Move to the next line

@@ -1776,6 +1776,10 @@ public class Applet extends JPanel implements PConstants, Runnable {
         Helper.openInBrowser(url);
     }
 
+    public boolean isValidURL(String url) {
+        return Helper.isValidURL(url);
+    }
+
     public String getClipboardContents() {
         return Helper.getClipboardContents();
     }
