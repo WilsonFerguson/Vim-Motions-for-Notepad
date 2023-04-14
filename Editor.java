@@ -52,7 +52,7 @@ class Editor extends PComponent {
     private char[] operators = { 'c', 'd', 'y', 'i', 'a', 'f', 'F', 'r' }; // TODO - add g, <, >, z
     private char[] motions = { 'i', 'a', 'I', 'A', 'w', 'b', 'W', 'B', 'C', 'D', 'e', 'E', 'h', 'j', 'k', 'l', '%', '0',
             '_', '^', '$',
-            'G', 's', 'p', 'P', 'x', 'o', 'O' };
+            'G', 's', 'p', 'P', 'x', 'o', 'O', '.' };
     private char[] commands = { ':', '/', '?', '*' }; // TODO - add others?
 
     public Editor(Sketch sketch) {
@@ -545,9 +545,14 @@ class Editor extends PComponent {
                 mode = Mode.INSERT;
                 fileSaved = false;
                 return true;
+            case '.':
+                this.motion = previousMotion;
+                parseMotion();
+                this.motion = "";
+                return true;
+            default:
+                return false;
         }
-
-        return false;
     }
 
     // w, 3b, etc.
@@ -734,7 +739,12 @@ class Editor extends PComponent {
         motion += key;
         if (errorMessage.length() > 0)
             errorMessage = "";
+        String initialMotion = String.valueOf(motion);
+
         parseMotion();
+
+        if (motion.length() == 0 && !initialMotion.equals("."))
+            previousMotion = initialMotion;
         return true;
     }
 
