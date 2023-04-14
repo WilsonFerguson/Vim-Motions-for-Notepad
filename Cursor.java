@@ -448,10 +448,12 @@ public class Cursor extends PComponent implements EventIgnorer {
     }
 
     private PVector getTextPosition(int x, int y) {
+        float textHeight = textAscent() + textDescent();
+        float yPosition = textHeight * y - textHeight("A") / 8; // Idk why it's 8, but it works
         if (content.get(y).length() == 0)
-            return new PVector(0, textHeight("A") * y);
+            return new PVector(0, yPosition);
 
-        return new PVector(textWidth(content.get(y).substring(0, x)), textHeight("A") * y);
+        return new PVector(textWidth(content.get(y).substring(0, x)), yPosition);
     }
 
     private void clamp(Mode mode) {

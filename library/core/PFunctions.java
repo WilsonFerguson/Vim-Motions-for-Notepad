@@ -125,6 +125,36 @@ public class PFunctions implements PConstants {
         Helper.copyToClipboard(text);
     }
 
+    public LinkedHashMap<String, String> loadProperties(String filename) {
+        String[] lines = loadStrings(filename);
+        LinkedHashMap<String, String> properties = new LinkedHashMap<>();
+        for (String line : lines) {
+            if (line.length() == 0 || line.startsWith("#") || !line.contains("="))
+                continue;
+
+            String[] split = line.split("=");
+            int lastHash = split[1].lastIndexOf("#");
+            if (lastHash != -1) {
+                split[1] = split[1].substring(0, lastHash);
+            }
+            split[0] = split[0].trim();
+            split[1] = split[1].trim();
+
+            properties.put(split[0], split[1]);
+        }
+
+        return properties;
+    }
+
+    public void saveProperties(LinkedHashMap<String, String> properties, String filename) {
+        ArrayList<String> lines = new ArrayList<>();
+        for (String key : properties.keySet()) {
+            lines.add(key + "=" + properties.get(key));
+        }
+
+        saveStrings(lines, filename);
+    }
+
     public void append(byte[] array, byte value) {
         byte[] newArray = new byte[array.length + 1];
         for (int i = 0; i < array.length; i++) {
@@ -1643,6 +1673,13 @@ public class PFunctions implements PConstants {
     public void saveStrings(String[] lines, String filename) {
         try {
             Files.write(Paths.get(filename), Arrays.asList(lines));
+        } catch (IOException e) {
+        }
+    }
+
+    public void saveStrings(java.util.List<String> lines, String filename) {
+        try {
+            Files.write(Paths.get(filename), lines);
         } catch (IOException e) {
         }
     }

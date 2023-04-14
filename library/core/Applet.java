@@ -70,6 +70,8 @@ public class Applet extends JPanel implements PConstants, Runnable {
     public int displayWidth;
     public int displayHeight;
     private double universalScale = 1;
+    private static double uiScale = 1;
+    private PVector frameImageSizeDifference; // Difference between the frame size and the image size
 
     // Input States
     public boolean mousePressed = false;
@@ -111,8 +113,12 @@ public class Applet extends JPanel implements PConstants, Runnable {
     private WindowHandler windowHandler = new WindowHandler(this);
 
     public static void fixWindowsScaling() {
+        // Note: have to do this in this order so that I can store the original scale
+        // but still modify the scale before it's too late
         if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+            Toolkit toolkit = Toolkit.getDefaultToolkit();
             System.setProperty("sun.java2d.uiScale", "1.0");
+            uiScale = toolkit.getScreenResolution() / 96.0;
         }
     }
 
@@ -227,6 +233,8 @@ public class Applet extends JPanel implements PConstants, Runnable {
         icons.add(new ImageIcon("icon2.png").getImage());
         icons.add(new ImageIcon("icon3.png").getImage());
         frame.setIconImages(icons);
+
+        frameImageSizeDifference = new PVector(frame.getWidth() - width, frame.getHeight() - height);
     }
 
     public void size(int width, int height) {
@@ -324,11 +332,10 @@ public class Applet extends JPanel implements PConstants, Runnable {
     }
 
     public double getWindowScale() {
-        try {
-            return getGraphicsConfiguration().getDefaultTransform().getScaleX();
-        } catch (Exception e) {
-            return 1;
-        }
+        if (uiScale != 1)
+            return uiScale;
+
+        return Toolkit.getDefaultToolkit().getScreenResolution() / 96.0;
     }
 
     public PVector getTrueScreenSize() {
@@ -729,8 +736,8 @@ public class Applet extends JPanel implements PConstants, Runnable {
 
     protected void windowResize() {
         if (!fullScreen) {
-            width = frame.getWidth();
-            height = frame.getHeight();
+            width = frame.getWidth() - (int) frameImageSizeDifference.x;
+            height = frame.getHeight() - (int) frameImageSizeDifference.y;
             PComponent.width = width;
             PComponent.height = height;
             setPreferredSize(new Dimension(width, height));
@@ -1140,11 +1147,13 @@ public class Applet extends JPanel implements PConstants, Runnable {
 
     // Stroke Weight
     public void strokeWeight(double weight) {
+        weight *= uiScale;
         strokeWeight = MathHelper.constrain(weight, 0, weight);
     }
 
     // Text Size
     public void textSize(double size) {
+        size *= uiScale;
         textSize = MathHelper.constrain(size, 0, size);
     }
 
@@ -1209,6 +1218,28 @@ public class Applet extends JPanel implements PConstants, Runnable {
 
         g2d.setTransform(oldTransform);
         return (float) hei;
+    }
+
+    // Returns the ascent of the text
+    public float textAscent() {
+        oldTransform = g2d.getTransform();
+
+        setFont();
+        double asc = g2d.getFontMetrics().getAscent();
+
+        g2d.setTransform(oldTransform);
+        return (float) asc;
+    }
+
+    // Returns the descent of the text
+    public float textDescent() {
+        oldTransform = g2d.getTransform();
+
+        setFont();
+        double des = g2d.getFontMetrics().getDescent();
+
+        g2d.setTransform(oldTransform);
+        return (float) des;
     }
 
     private void drawGenericStart() {
@@ -1751,6 +1782,36 @@ public class Applet extends JPanel implements PConstants, Runnable {
 
     public void copyToClipboard(String text) {
         Helper.copyToClipboard(text);
+    }
+
+    public LinkedHashMap<String, String> loadProperties(String filename) {
+        String[] lines = loadStrings(filename);
+        LinkedHashMap<String, String> properties = new LinkedHashMap<>();
+        for (String line : lines) {
+            if (line.length() == 0 || line.startsWith("#") || !line.contains("="))
+                continue;
+
+            String[] split = line.split("=");
+            int lastHash = split[1].lastIndexOf("#");
+            if (lastHash != -1) {
+                split[1] = split[1].substring(0, lastHash);
+            }
+            split[0] = split[0].trim();
+            split[1] = split[1].trim();
+
+            properties.put(split[0], split[1]);
+        }
+
+        return properties;
+    }
+
+    public void saveProperties(LinkedHashMap<String, String> properties, String filename) {
+        ArrayList<String> lines = new ArrayList<>();
+        for (String key : properties.keySet()) {
+            lines.add(key + "=" + properties.get(key));
+        }
+
+        saveStrings(lines, filename);
     }
 
     public void append(byte[] array, byte value) {
@@ -3369,6 +3430,13 @@ public class Applet extends JPanel implements PConstants, Runnable {
     public void saveStrings(String[] lines, String filename) {
         try {
             Files.write(Paths.get(filename), Arrays.asList(lines));
+        } catch (IOException e) {
+        }
+    }
+
+    public void saveStrings(java.util.List<String> lines, String filename) {
+        try {
+            Files.write(Paths.get(filename), lines);
         } catch (IOException e) {
         }
     }

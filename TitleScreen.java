@@ -14,15 +14,10 @@ public class TitleScreen extends PComponent {
     private String motion = "";
 
     public TitleScreen() {
-        Properties properties = new Properties();
-        try {
-            properties.load(getClass().getClassLoader().getResourceAsStream("settings.properties"));
-            backgroundColor = color(properties.getProperty("backgroundColor"));
-            textColor = color(properties.getProperty("textColor"));
-            textFont(properties.getProperty("fontFamily"));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        LinkedHashMap<String, String> properties = loadProperties("settings.properties");
+        backgroundColor = color(properties.get("backgroundColor"));
+        textColor = color(properties.get("textColor"));
+        textFont(properties.get("fontFamily"));
 
         recentFiles = loadStrings("RecentFiles.txt");
         // Remove any files that don't exist
@@ -121,8 +116,7 @@ public class TitleScreen extends PComponent {
         // Draw the motion
         textAlign(LEFT);
         fill(textColor);
-        // text(motion, 0, height - textHeight("a"));
-        text(motion, 0, height - textHeight(motion) * 2);
+        text(motion, 0, height - textHeight(motion));
     }
 
     public void keyPressed() {

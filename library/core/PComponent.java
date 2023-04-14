@@ -381,6 +381,16 @@ public class PComponent extends PFunctions {
         return applet.textHeight(text);
     }
 
+    // Returns the ascent of the text
+    public float textAscent() {
+        return applet.textAscent();
+    }
+
+    // Returns the descent of the text
+    public float textDescent() {
+        return applet.textDescent();
+    }
+
     // Ellipse
     public void ellipse(double x, double y, double w, double h) {
         applet.ellipse(x, y, w, h);

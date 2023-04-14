@@ -1,17 +1,23 @@
 import java.io.File;
+import java.util.*;
 
 import library.core.*;
 
-// TODO add a feature that saves the past 10 opened files to a txt and then have an option to open a recent file
 class Sketch extends Applet {
 
     TitleScreen title;
     Editor editor;
 
     public void setup() {
-        // Set width and height to be half of the screen size
-        PVector screenSize = getScaledScreenSize();
-        size((int) screenSize.x / 2, (int) screenSize.y / 2);
+        LinkedHashMap<String, String> properties = loadProperties("settings.properties");
+        int frameWidth = parseInt(properties.get("frameWidth"));
+        if (frameWidth == 0) {
+            PVector screenSize = getScaledScreenSize();
+            size((int) screenSize.x / 2, (int) screenSize.y / 2);
+        } else {
+            int frameHeight = parseInt(properties.get("frameHeight"));
+            size(frameWidth, frameHeight);
+        }
         setResizable(true);
 
         setTitle("Vim Motions for Notepad");
@@ -48,5 +54,12 @@ class Sketch extends Applet {
         }
         if (editor != null)
             editor.draw();
+    }
+
+    public void onExit() {
+        LinkedHashMap<String, String> properties = loadProperties("settings.properties");
+        properties.put("frameWidth", Integer.toString(width));
+        properties.put("frameHeight", Integer.toString(height));
+        saveProperties(properties, "settings.properties");
     }
 }

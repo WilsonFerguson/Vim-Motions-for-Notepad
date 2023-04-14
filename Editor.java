@@ -68,8 +68,8 @@ class Editor extends PComponent {
         textFont(fontFamily);
         textAlign(TextAlignment.LEFT);
 
-        lineHeight = textHeight("A");
-        bottomMargin = lineHeight * 3.3f;
+        lineHeight = textAscent() + textDescent();
+        bottomMargin = lineHeight * 2;
 
         lastBlink = millis();
 
@@ -702,7 +702,35 @@ class Editor extends PComponent {
         return true;
     }
 
-    public boolean handleNormalMode() {
+    private void handleControlKey() {
+        if (keysPressed.size() != 2)
+            return;
+
+        switch (keyString) {
+            case "A":
+                mode = Mode.VISUAL;
+                visualEndpoints.clear();
+                visualEndpoints.add(new PVector(0, 0));
+                cursor.y = content.size() - 1;
+                cursor.x = cursor.getEndOfLine();
+                visualEndpoints.add(cursor.toPVector());
+                break;
+            case "Equals":
+                fontSize *= 1.1;
+                textSize(fontSize);
+                lineHeight = textAscent() + textDescent();
+                bottomMargin = lineHeight * 2;
+                break;
+            case "Minus":
+                fontSize /= 1.1;
+                textSize(fontSize);
+                lineHeight = textAscent() + textDescent();
+                bottomMargin = lineHeight * 2;
+                break;
+        }
+    }
+
+    private boolean handleNormalMode() {
         if (key == 'v') {
             mode = Mode.VISUAL;
             visualEndpoints.clear();
@@ -723,7 +751,7 @@ class Editor extends PComponent {
         return handleMotions();
     }
 
-    public boolean handleVisualMode() {
+    private boolean handleVisualMode() {
         // Escape and they aren't typing a motion right now
         if (keyString.equals("Escape") && motion.length() == 0) {
             mode = Mode.NORMAL;
@@ -735,6 +763,11 @@ class Editor extends PComponent {
     }
 
     public void keyPressed() {
+        if (keysPressed.contains("Ctrl")) {
+            handleControlKey();
+            return;
+        }
+
         switch (mode) {
             case INSERT:
                 handleInsertMode();
@@ -799,6 +832,7 @@ class Editor extends PComponent {
             filePath += " [+]";
 
         fill(backgroundColor);
+        rectMode(CORNER);
         rect(0, height - bottomMargin, width, bottomMargin);
         fill(255, 20);
         rect(0, height - bottomMargin, width, lineHeight);
