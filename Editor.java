@@ -869,7 +869,7 @@ class Editor extends PComponent {
         // Draw bottom two lines
         // (file path) on left, on right: line number, column number, percentage of file
         // (mode if not in normal), on right: motion being typed
-        String filePath = "[No name]";
+        String filePath = "[No Name]";
         if (file != null) {
             filePath = file.getAbsolutePath();
 
