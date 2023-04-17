@@ -445,6 +445,47 @@ class Editor extends PComponent {
         return false;
     }
 
+    private boolean runContentModification(char motion) {
+        switch (motion) {
+            case 'C':
+                cursor.deleteToLineEnd();
+                mode = Mode.INSERT;
+                fileSaved = false;
+                return true;
+            case 'D':
+                cursor.deleteToLineEnd();
+                fileSaved = false;
+                return true;
+            case 'o':
+                cursor.newLineBelow();
+                mode = Mode.INSERT;
+                fileSaved = false;
+                return true;
+            case 'O':
+                cursor.newLineAbove();
+                mode = Mode.INSERT;
+                fileSaved = false;
+                return true;
+            case 's':
+                cursor.deleteCurrentCharacter();
+                mode = Mode.INSERT;
+                fileSaved = false;
+                return true;
+            case 'p':
+                cursor.pasteAfter();
+                return true;
+            case 'P':
+                cursor.pasteBefore();
+                return true;
+            case 'x':
+                cursor.deleteCurrentCharacter();
+                fileSaved = false;
+                return true;
+        }
+
+        return false;
+    }
+
     private boolean runMotion(char motion) {
         switch (motion) {
             case 'i':
@@ -473,15 +514,6 @@ class Editor extends PComponent {
                 return true;
             case 'B':
                 cursor.previousWordWithPunctuation();
-                return true;
-            case 'C':
-                cursor.deleteToLineEnd();
-                mode = Mode.INSERT;
-                fileSaved = false;
-                return true;
-            case 'D':
-                cursor.deleteToLineEnd();
-                fileSaved = false;
                 return true;
             case 'e':
                 cursor.endOfWord();
@@ -520,34 +552,9 @@ class Editor extends PComponent {
                 cursor.y = content.size() - 1;
                 cursor.x = cursor.getEndOfLine();
                 return true;
-            case 's':
-                cursor.deleteCurrentCharacter();
-                mode = Mode.INSERT;
-                fileSaved = false;
-                return true;
-            case 'p':
-                cursor.pasteAfter();
-                return true;
-            case 'P':
-                cursor.pasteBefore();
-                return true;
-            case 'x':
-                cursor.deleteCurrentCharacter();
-                fileSaved = false;
-                return true;
-            case 'o':
-                cursor.newLineBelow();
-                mode = Mode.INSERT;
-                fileSaved = false;
-                return true;
-            case 'O':
-                cursor.newLineAbove();
-                mode = Mode.INSERT;
-                fileSaved = false;
-                return true;
             case '.':
                 this.motion = previousMotion;
-                parseMotion();
+                parseMotion(true);
                 this.motion = "";
                 return true;
             default:
@@ -559,6 +566,16 @@ class Editor extends PComponent {
     private boolean runMotion(int numTimes, char motion) {
         for (int i = 0; i < numTimes; i++) {
             boolean result = runMotion(motion);
+            if (!result)
+                return false;
+        }
+
+        return true;
+    }
+
+    private boolean runContentModification(int numTimes, char motion) {
+        for (int i = 0; i < numTimes; i++) {
+            boolean result = runContentModification(motion);
             if (!result)
                 return false;
         }
@@ -598,7 +615,7 @@ class Editor extends PComponent {
         return false;
     }
 
-    private void parseMotion() {
+    private void parseMotion(boolean handleContentModification) {
         if (motion.length() == 0)
             return;
 
@@ -630,6 +647,8 @@ class Editor extends PComponent {
         char c = motion.charAt(0);
         if (isMotion(c)) {
             if (runMotion(number, c))
+                this.motion = "";
+            else if (handleContentModification && runContentModification(number, c))
                 this.motion = "";
             return;
         }
@@ -695,7 +714,7 @@ class Editor extends PComponent {
 
     }
 
-    private boolean handleMotions() {
+    private boolean handleMotions(boolean handleContentModification) {
         if (keyString.equals("Escape")) {
             motion = "";
             return true;
@@ -741,7 +760,7 @@ class Editor extends PComponent {
             errorMessage = "";
         String initialMotion = String.valueOf(motion);
 
-        parseMotion();
+        parseMotion(handleContentModification);
 
         if (motion.length() == 0 && !initialMotion.equals("."))
             previousMotion = initialMotion;
@@ -794,7 +813,7 @@ class Editor extends PComponent {
             return true;
         }
 
-        return handleMotions();
+        return handleMotions(true);
     }
 
     private boolean handleVisualMode() {
@@ -805,7 +824,7 @@ class Editor extends PComponent {
             return true;
         }
 
-        return handleMotions();
+        return handleMotions(false);
     }
 
     public void keyPressed() {
