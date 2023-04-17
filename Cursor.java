@@ -267,8 +267,17 @@ public class Cursor extends PComponent implements EventIgnorer {
     }
 
     public void deleteCurrentCharacter() {
-        if (!onCharacter())
+        if (!onCharacter() && x != 0)
             return;
+
+        if (x == 0) {
+            int originalLength = content.get(y - 1).length();
+            content.set(y - 1, content.get(y - 1) + content.get(y));
+            content.remove(y);
+            y--;
+            x = originalLength;
+            return;
+        }
 
         String line = content.get(y);
         content.set(y, line.substring(0, x) + line.substring(x + 1));
