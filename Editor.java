@@ -237,6 +237,10 @@ class Editor extends PComponent {
     }
 
     private boolean isMotion(char c) {
+        // TODO this is such a hack
+        if (c == 'd' && mode == Mode.VISUAL)
+            return true;
+
         for (int i = 0; i < motions.length; i++)
             if (c == motions[i])
                 return true;
@@ -445,6 +449,21 @@ class Editor extends PComponent {
         return false;
     }
 
+    private void deleteLines(ArrayList<Integer> lines) {
+        // Delete every unique line
+        for (int i = lines.size() - 1; i >= 0; i--) {
+            content.remove((int) lines.get(i));
+            // If this line is above or at the cursor, move the cursor up one
+            if (lines.get(i) < cursor.y
+                    || (lines.get(i) == cursor.y && cursor.y == content.size()))
+                cursor.up();
+        }
+        // If cursor is to far to the right of the its current line, move it to the end
+        // of the line
+        if (cursor.x > content.get(cursor.y).length())
+            cursor.x = content.get(cursor.y).length();
+    }
+
     // TODO #7 refactor this, it's awful
     private boolean runContentModification(char motion) {
         if (mode == Mode.NORMAL) {
@@ -496,28 +515,29 @@ class Editor extends PComponent {
             if (!uniqueLines.contains((int) selectedCharacter.y))
                 uniqueLines.add((int) selectedCharacter.y);
         }
+        boolean changed = false;
+        // TODO the end cursor position for C/c D/d is not fully correct
         switch (motion) {
             case 'C':
-                // Delete every unique line
-                for (int i = uniqueLines.size() - 1; i >= 0; i--) {
-                    content.remove((int) uniqueLines.get(i));
-                    // If this line is above or at the cursor, move the cursor up one
-                    if (uniqueLines.get(i) <= cursor.y)
-                        cursor.up();
-                }
+                deleteLines(uniqueLines);
                 mode = Mode.INSERT;
-                fileSaved = false;
-                return true;
+                visualEndpoints.clear();
+                changed = true;
+                break;
+            case 'c':
+                deleteLines(uniqueLines);
+                mode = Mode.INSERT;
+                visualEndpoints.clear();
+                changed = true;
+                break;
             case 'D':
-                // Delete every unique line
-                for (int i = uniqueLines.size() - 1; i >= 0; i--) {
-                    content.remove((int) uniqueLines.get(i));
-                    // If this line is above or at the cursor, move the cursor up one
-                    if (uniqueLines.get(i) <= cursor.y)
-                        cursor.up();
-                }
-                fileSaved = false;
-                return true;
+                deleteLines(uniqueLines);
+                changed = true;
+                break;
+            case 'd':
+                deleteLines(uniqueLines);
+                changed = true;
+                break;
             case 'o':
                 if (cursor.toPVector().equals(visualEndpoints.get(0))) {
                     cursor.x = (int) visualEndpoints.get(1).x;
@@ -562,8 +582,8 @@ class Editor extends PComponent {
                 cursor.y = (int) start.y;
 
                 mode = Mode.INSERT;
-                fileSaved = false;
-                return true;
+                changed = true;
+                break;
             case 'p':
                 // Delete every unique line
                 for (int i = uniqueLines.size() - 1; i >= 0; i--) {
@@ -574,9 +594,8 @@ class Editor extends PComponent {
                 }
 
                 cursor.pasteAfter();
-                mode = Mode.NORMAL;
-                visualEndpoints.clear();
-                return true;
+                changed = true;
+                break;
             case 'P':
                 // Delete every unique line
                 for (int i = uniqueLines.size() - 1; i >= 0; i--) {
@@ -586,10 +605,9 @@ class Editor extends PComponent {
                         cursor.up();
                 }
 
-                cursor.pasteBefore();
-                mode = Mode.NORMAL;
-                visualEndpoints.clear();
-                return true;
+                cursor.pasteAfter();
+                changed = true;
+                break;
             case 'x':
                 // Delete each character, move cursor to beginning of selection
                 for (int i = selectedCharacters.size() - 1; i >= 0; i--) {
@@ -614,8 +632,16 @@ class Editor extends PComponent {
 
                 cursor.x = (int) start.x;
                 cursor.y = (int) start.y;
-                fileSaved = false;
-                return true;
+                changed = true;
+                break;
+        }
+        if (changed) {
+            if (mode == Mode.VISUAL) {
+                mode = Mode.NORMAL;
+                visualEndpoints.clear();
+            }
+            fileSaved = false;
+            return true;
         }
         return false;
     }
