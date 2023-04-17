@@ -41,6 +41,10 @@ public class Cursor extends PComponent implements EventIgnorer {
         visible = false;
     }
 
+    public List<String> getContent() {
+        return content;
+    }
+
     public void left() {
         if (x == 0 && y == 0)
             return;

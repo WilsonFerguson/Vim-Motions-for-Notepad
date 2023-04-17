@@ -445,44 +445,178 @@ class Editor extends PComponent {
         return false;
     }
 
+    // TODO #7 refactor this, it's awful
     private boolean runContentModification(char motion) {
+        if (mode == Mode.NORMAL) {
+            switch (motion) {
+                case 'C':
+                    cursor.deleteToLineEnd();
+                    mode = Mode.INSERT;
+                    fileSaved = false;
+                    return true;
+                case 'D':
+                    cursor.deleteToLineEnd();
+                    fileSaved = false;
+                    return true;
+                case 'o':
+                    cursor.newLineBelow();
+                    mode = Mode.INSERT;
+                    fileSaved = false;
+                    return true;
+                case 'O':
+                    cursor.newLineAbove();
+                    mode = Mode.INSERT;
+                    fileSaved = false;
+                    return true;
+                case 's':
+                    cursor.deleteCurrentCharacter();
+                    mode = Mode.INSERT;
+                    fileSaved = false;
+                    return true;
+                case 'p':
+                    cursor.pasteAfter();
+                    fileSaved = false;
+                    return true;
+                case 'P':
+                    cursor.pasteBefore();
+                    fileSaved = false;
+                    return true;
+                case 'x':
+                    cursor.deleteCurrentCharacter();
+                    fileSaved = false;
+                    return true;
+            }
+            return false;
+        }
+
+        // Visual mode
+        List<PVector> selectedCharacters = getSelectedCharacters();
+        ArrayList<Integer> uniqueLines = new ArrayList<>();
+        for (PVector selectedCharacter : selectedCharacters) {
+            if (!uniqueLines.contains((int) selectedCharacter.y))
+                uniqueLines.add((int) selectedCharacter.y);
+        }
         switch (motion) {
             case 'C':
-                cursor.deleteToLineEnd();
+                // Delete every unique line
+                for (int i = uniqueLines.size() - 1; i >= 0; i--) {
+                    content.remove((int) uniqueLines.get(i));
+                    // If this line is above or at the cursor, move the cursor up one
+                    if (uniqueLines.get(i) <= cursor.y)
+                        cursor.up();
+                }
                 mode = Mode.INSERT;
                 fileSaved = false;
                 return true;
             case 'D':
-                cursor.deleteToLineEnd();
+                // Delete every unique line
+                for (int i = uniqueLines.size() - 1; i >= 0; i--) {
+                    content.remove((int) uniqueLines.get(i));
+                    // If this line is above or at the cursor, move the cursor up one
+                    if (uniqueLines.get(i) <= cursor.y)
+                        cursor.up();
+                }
                 fileSaved = false;
                 return true;
             case 'o':
-                cursor.newLineBelow();
-                mode = Mode.INSERT;
-                fileSaved = false;
+                if (cursor.toPVector().equals(visualEndpoints.get(0))) {
+                    cursor.x = (int) visualEndpoints.get(1).x;
+                    cursor.y = (int) visualEndpoints.get(1).y;
+                } else {
+                    cursor.x = (int) visualEndpoints.get(0).x;
+                    cursor.y = (int) visualEndpoints.get(0).y;
+                }
+                visualSelectionIndex = visualSelectionIndex == 0 ? 1 : 0;
                 return true;
             case 'O':
-                cursor.newLineAbove();
-                mode = Mode.INSERT;
-                fileSaved = false;
+                if (cursor.toPVector().equals(visualEndpoints.get(0))) {
+                    cursor.x = (int) visualEndpoints.get(1).x;
+                    cursor.y = (int) visualEndpoints.get(1).y;
+                } else {
+                    cursor.x = (int) visualEndpoints.get(0).x;
+                    cursor.y = (int) visualEndpoints.get(0).y;
+                }
+                visualSelectionIndex = visualSelectionIndex == 0 ? 1 : 0;
                 return true;
             case 's':
-                cursor.deleteCurrentCharacter();
+                // Delete each character, move cursor to beginning of selection
+                for (int i = selectedCharacters.size() - 1; i >= 0; i--) {
+                    PVector selectedCharacter = selectedCharacters.get(i);
+                    String line = content.get((int) selectedCharacter.y);
+                    line = line.substring(0, (int) selectedCharacter.x)
+                            + line.substring((int) min(selectedCharacter.x, line.length() - 1) + 1);
+
+                    if (line.length() > 0)
+                        content.set((int) selectedCharacter.y, line);
+                    else
+                        content.remove((int) selectedCharacter.y);
+                }
+
+                // Get left most endpoint
+                PVector start = visualEndpoints.get(0);
+                PVector end = visualEndpoints.get(1);
+                if (start.y > end.y || (start.y == end.y && start.x > end.x))
+                    start = end;
+
+                cursor.x = (int) start.x;
+                cursor.y = (int) start.y;
+
                 mode = Mode.INSERT;
                 fileSaved = false;
                 return true;
             case 'p':
+                // Delete every unique line
+                for (int i = uniqueLines.size() - 1; i >= 0; i--) {
+                    content.remove((int) uniqueLines.get(i));
+                    // If this line is above or at the cursor, move the cursor up one
+                    if (uniqueLines.get(i) <= cursor.y)
+                        cursor.up();
+                }
+
                 cursor.pasteAfter();
+                mode = Mode.NORMAL;
+                visualEndpoints.clear();
                 return true;
             case 'P':
+                // Delete every unique line
+                for (int i = uniqueLines.size() - 1; i >= 0; i--) {
+                    content.remove((int) uniqueLines.get(i));
+                    // If this line is above or at the cursor, move the cursor up one
+                    if (uniqueLines.get(i) <= cursor.y)
+                        cursor.up();
+                }
+
                 cursor.pasteBefore();
+                mode = Mode.NORMAL;
+                visualEndpoints.clear();
                 return true;
             case 'x':
-                cursor.deleteCurrentCharacter();
+                // Delete each character, move cursor to beginning of selection
+                for (int i = selectedCharacters.size() - 1; i >= 0; i--) {
+                    PVector selectedCharacter = selectedCharacters.get(i);
+                    String line = content.get((int) selectedCharacter.y);
+                    line = line.substring(0, (int) selectedCharacter.x)
+                            + line.substring((int) min(selectedCharacter.x, line.length() - 1) + 1);
+
+                    if (line.length() > 0)
+                        content.set((int) selectedCharacter.y, line);
+                    else
+                        content.remove((int) selectedCharacter.y);
+                }
+
+                // Get left most endpoint
+                // Is java an idiot? how the hell is this already defined in the scope of this
+                // function?
+                start = visualEndpoints.get(0);
+                end = visualEndpoints.get(1);
+                if (start.y > end.y || (start.y == end.y && start.x > end.x))
+                    start = end;
+
+                cursor.x = (int) start.x;
+                cursor.y = (int) start.y;
                 fileSaved = false;
                 return true;
         }
-
         return false;
     }
 
@@ -554,7 +688,7 @@ class Editor extends PComponent {
                 return true;
             case '.':
                 this.motion = previousMotion;
-                parseMotion(true);
+                parseMotion();
                 this.motion = "";
                 return true;
             default:
@@ -573,6 +707,7 @@ class Editor extends PComponent {
         return true;
     }
 
+    // o, p, x, etc.
     private boolean runContentModification(int numTimes, char motion) {
         for (int i = 0; i < numTimes; i++) {
             boolean result = runContentModification(motion);
@@ -615,7 +750,7 @@ class Editor extends PComponent {
         return false;
     }
 
-    private void parseMotion(boolean handleContentModification) {
+    private void parseMotion() {
         if (motion.length() == 0)
             return;
 
@@ -648,7 +783,7 @@ class Editor extends PComponent {
         if (isMotion(c)) {
             if (runMotion(number, c))
                 this.motion = "";
-            else if (handleContentModification && runContentModification(number, c))
+            else if (runContentModification(number, c))
                 this.motion = "";
             return;
         }
@@ -714,7 +849,7 @@ class Editor extends PComponent {
 
     }
 
-    private boolean handleMotions(boolean handleContentModification) {
+    private boolean handleMotions() {
         if (keyString.equals("Escape")) {
             motion = "";
             return true;
@@ -760,7 +895,7 @@ class Editor extends PComponent {
             errorMessage = "";
         String initialMotion = String.valueOf(motion);
 
-        parseMotion(handleContentModification);
+        parseMotion();
 
         if (motion.length() == 0 && !initialMotion.equals("."))
             previousMotion = initialMotion;
@@ -813,7 +948,7 @@ class Editor extends PComponent {
             return true;
         }
 
-        return handleMotions(true);
+        return handleMotions();
     }
 
     private boolean handleVisualMode() {
@@ -824,7 +959,7 @@ class Editor extends PComponent {
             return true;
         }
 
-        return handleMotions(false);
+        return handleMotions();
     }
 
     public void keyPressed() {
