@@ -998,7 +998,7 @@ class Editor extends PComponent {
 
     // TODO - this is quite a hacky way to do this
     public void mimicKeyPress(char key) {
-        char previousKey = this.key;
+        char previousKey = PComponent.key;
         PComponent.key = key;
         keyPressed();
         PComponent.key = previousKey;
