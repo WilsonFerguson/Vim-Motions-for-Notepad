@@ -116,7 +116,7 @@ class Editor extends PComponent {
         }
     }
 
-    public List<String> getContent() {
+    public ArrayList<String> getContent() {
         return content;
     }
 
@@ -124,11 +124,9 @@ class Editor extends PComponent {
         return mode;
     }
 
-    // TODO make this history work
     private void pushToHistory() {
-        history.add(max(historyIndex, 0), new ArrayList<>(content));
         historyIndex++;
-        println(history);
+        history.add(max(historyIndex, 0), new ArrayList<>(content));
     }
 
     private void undo() {
@@ -136,7 +134,9 @@ class Editor extends PComponent {
             return;
 
         historyIndex--;
-        content = history.get(historyIndex);
+        content = new ArrayList<>(history.get(historyIndex));
+        cursor.setContent(content);
+        cursor.fixOutOfBounds();
     }
 
     private void redo() {
@@ -144,7 +144,9 @@ class Editor extends PComponent {
             return;
 
         historyIndex++;
-        content = history.get(historyIndex);
+        content = new ArrayList<>(history.get(historyIndex));
+        cursor.setContent(content);
+        cursor.fixOutOfBounds();
     }
 
     /**
@@ -1051,6 +1053,9 @@ class Editor extends PComponent {
                 lineHeight = textAscent() + textDescent();
                 bottomMargin = lineHeight * 2;
                 break;
+            case "R":
+                redo();
+                break;
         }
     }
 
@@ -1087,7 +1092,7 @@ class Editor extends PComponent {
     }
 
     public void keyPressed() {
-        ArrayList<String> previousContent = new ArrayList<String>(content);
+        ArrayList<String> previousContent = new ArrayList<>(content);
         Mode previousMode = mode;
 
         if (keysPressed.contains("Ctrl")) {
@@ -1115,7 +1120,7 @@ class Editor extends PComponent {
                 break;
         }
 
-        if (!content.equals(previousContent) && previousMode != Mode.INSERT) {
+        if (!content.equals(previousContent) && previousMode != Mode.INSERT && key != 'u') {
             pushToHistory();
         }
     }

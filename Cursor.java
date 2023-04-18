@@ -14,7 +14,7 @@ public class Cursor extends PComponent implements EventIgnorer {
     int y;
 
     private Editor editor;
-    private List<String> content;
+    private ArrayList<String> content;
 
     private boolean visible = true;
 
@@ -43,6 +43,10 @@ public class Cursor extends PComponent implements EventIgnorer {
 
     public List<String> getContent() {
         return content;
+    }
+
+    public void setContent(ArrayList<String> content) {
+        this.content = content;
     }
 
     public void left() {
@@ -458,6 +462,11 @@ public class Cursor extends PComponent implements EventIgnorer {
             return false;
 
         return x > other.x;
+    }
+
+    public void fixOutOfBounds() {
+        y = max(0, min(y, content.size() - 1));
+        x = max(0, min(x, getEndOfLine()));
     }
 
     public String getWordWithPunctuation() {
