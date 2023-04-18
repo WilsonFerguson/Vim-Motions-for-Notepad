@@ -9,7 +9,9 @@ import library.core.*;
 class Editor extends PComponent {
     private Sketch sketch;
 
-    private List<String> content;
+    private ArrayList<String> content;
+    private ArrayList<ArrayList<String>> history;
+    private int historyIndex = -1; // Will get set to 0 after first history push
 
     private File file;
     private boolean fileSaved = true;
@@ -52,7 +54,7 @@ class Editor extends PComponent {
     private char[] operators = { 'c', 'd', 'y', 'i', 'a', 'f', 'F', 'r' }; // TODO - add g, <, >, z
     private char[] motions = { 'i', 'a', 'I', 'A', 'w', 'b', 'W', 'B', 'C', 'D', 'e', 'E', 'h', 'j', 'k', 'l', '%', '0',
             '_', '^', '$',
-            'G', 's', 'p', 'P', 'x', 'o', 'O', '.' };
+            'G', 's', 'p', 'P', 'x', 'o', 'O', '.', 'u' };
     private char[] commands = { ':', '/', '?', '*' }; // TODO - add others?
 
     public Editor(Sketch sketch) {
@@ -60,6 +62,8 @@ class Editor extends PComponent {
 
         content = new ArrayList<>();
         content.add("");
+        history = new ArrayList<>();
+        pushToHistory();
 
         readProperties();
 
@@ -118,6 +122,29 @@ class Editor extends PComponent {
 
     public Mode getMode() {
         return mode;
+    }
+
+    // TODO make this history work
+    private void pushToHistory() {
+        history.add(max(historyIndex, 0), new ArrayList<>(content));
+        historyIndex++;
+        println(history);
+    }
+
+    private void undo() {
+        if (historyIndex == 0)
+            return;
+
+        historyIndex--;
+        content = history.get(historyIndex);
+    }
+
+    private void redo() {
+        if (historyIndex == history.size() - 1)
+            return;
+
+        historyIndex++;
+        content = history.get(historyIndex);
     }
 
     /**
@@ -205,6 +232,8 @@ class Editor extends PComponent {
     public void handleInsertMode() {
         if (keyString.equals("Escape")) {
             mode = Mode.NORMAL;
+            if (!history.get(historyIndex).equals(content))
+                pushToHistory();
             return;
         }
 
@@ -300,6 +329,8 @@ class Editor extends PComponent {
             cursor = new Cursor(this);
 
             scanner.close();
+
+            pushToHistory();
         } catch (FileNotFoundException e) {
             println("Unable to open file: " + e.getMessage());
         }
@@ -694,6 +725,9 @@ class Editor extends PComponent {
                 parseMotion();
                 this.motion = "";
                 return true;
+            case 'u':
+                undo();
+                return true;
             default:
                 return false;
         }
@@ -1053,6 +1087,9 @@ class Editor extends PComponent {
     }
 
     public void keyPressed() {
+        ArrayList<String> previousContent = new ArrayList<String>(content);
+        Mode previousMode = mode;
+
         if (keysPressed.contains("Ctrl")) {
             handleControlKey();
             return;
@@ -1076,6 +1113,10 @@ class Editor extends PComponent {
                     cursor.makeVisible();
                 }
                 break;
+        }
+
+        if (!content.equals(previousContent) && previousMode != Mode.INSERT) {
+            pushToHistory();
         }
     }
 
