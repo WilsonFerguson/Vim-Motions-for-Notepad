@@ -533,12 +533,8 @@ class Editor extends PComponent {
         }
 
         // Visual mode
-        List<PVector> selectedCharacters = getSelectedCharacters();
-        ArrayList<Integer> uniqueLines = new ArrayList<>();
-        for (PVector selectedCharacter : selectedCharacters) {
-            if (!uniqueLines.contains((int) selectedCharacter.y))
-                uniqueLines.add((int) selectedCharacter.y);
-        }
+        ArrayList<PVector> selectedCharacters = getSelectedCharacters();
+        ArrayList<Integer> uniqueLines = getSelectedCharactersLines();
         boolean changed = false;
 
         switch (motion) {
@@ -732,6 +728,37 @@ class Editor extends PComponent {
             case 'c':
             case 'd':
             case 'y':
+                if (mode == Mode.VISUAL) {
+                    ArrayList<Integer> lines = getSelectedCharactersLines();
+                    String[] linesArray = new String[lines.size()];
+                    PVector[] endpoints = getSortedVisualEndpoints();
+                    PVector start = endpoints[0];
+                    PVector end = endpoints[1];
+
+                    for (int i = 0; i < lines.size(); i++) {
+                        String line = content.get(lines.get(i));
+                        // Cut line off at end points
+                        if (lines.get(i) == start.y) {
+                            line = line.substring((int) start.x);
+                        }
+                        if (lines.get(i) == end.y) {
+                            int endX = (int) end.x;
+                            if (start.y == end.y)
+                                endX -= (int) start.x;
+                            line = line.substring(0, endX + 1);
+                        }
+
+                        linesArray[i] = line + "\n";
+                    }
+                    String text = String.join("", linesArray);
+                    copyToClipboard(text);
+                    mode = Mode.NORMAL;
+                    return true;
+                }
+
+                // TODO implement for normal mode
+                mode = Mode.NORMAL;
+                return true;
             case 'i':
             case 'a':
             case 'f':
@@ -763,6 +790,17 @@ class Editor extends PComponent {
                 cursor.x = index;
                 return true;
             case 'r':
+                searchChar = motion;
+                if (numTimes != 1)
+                    searchChar = (char) ((char) numTimes + '0');
+
+                if (!cursor.onCharacter())
+                    return true;
+
+                String line = content.get(cursor.y);
+                line = line.substring(0, cursor.x) + searchChar + line.substring(cursor.x + 1);
+                content.set(cursor.y, line);
+                return true;
         }
         return false;
     }
@@ -841,7 +879,8 @@ class Editor extends PComponent {
         if (number2 == 0)
             number2 = 1;
 
-        if ((operator == 'f' || operator == 'F') && this.motion.length() > 1) {
+        if ((Character.toLowerCase(operator) == 'f' || Character.toLowerCase(operator) == 'r')
+                && this.motion.length() > 1) {
             char charToFind = ' ';
             if (motion.length() > 0)
                 charToFind = motion.charAt(0);
@@ -851,6 +890,12 @@ class Editor extends PComponent {
                 return;
             }
         }
+        if (operator == 'y' && this.motion.length() == 1 && mode == Mode.VISUAL) {
+            runMotion(number, operator, number2, 'y');
+            this.motion = "";
+            return;
+        }
+
         if (motion.length() == 0) {
             // Example: 3d3 or 3d meaning it's not a valid motion
             return;
@@ -1127,11 +1172,7 @@ class Editor extends PComponent {
         pop();
     }
 
-    private List<PVector> getSelectedCharacters() {
-        if (mode != Mode.VISUAL)
-            return new ArrayList<PVector>();
-
-        List<PVector> selectedCharacters = new ArrayList<>();
+    private PVector[] getSortedVisualEndpoints() {
         PVector start = visualEndpoints.get(0).copy();
         PVector end = visualEndpoints.get(1).copy();
         // Swap start and end if they're in the wrong order
@@ -1141,6 +1182,18 @@ class Editor extends PComponent {
             end = temp;
         }
 
+        return new PVector[] { start, end };
+    }
+
+    private ArrayList<PVector> getSelectedCharacters() {
+        if (mode != Mode.VISUAL)
+            return new ArrayList<PVector>();
+
+        ArrayList<PVector> selectedCharacters = new ArrayList<>();
+        PVector[] endpoints = getSortedVisualEndpoints();
+        PVector start = endpoints[0];
+        PVector end = endpoints[1];
+
         Cursor pointer = new Cursor(this, (int) start.x, (int) start.y);
         while (pointer.x != end.x || pointer.y != end.y) {
             selectedCharacters.add(pointer.toPVector());
@@ -1149,6 +1202,15 @@ class Editor extends PComponent {
         selectedCharacters.add(pointer.toPVector());
 
         return selectedCharacters;
+    }
+
+    private ArrayList<Integer> getSelectedCharactersLines() {
+        ArrayList<Integer> uniqueLines = new ArrayList<>();
+        for (PVector selectedCharacter : getSelectedCharacters()) {
+            if (!uniqueLines.contains((int) selectedCharacter.y))
+                uniqueLines.add((int) selectedCharacter.y);
+        }
+        return uniqueLines;
     }
 
     private float drawSequence(String sequence, float x, float y) {
@@ -1206,7 +1268,7 @@ class Editor extends PComponent {
         float charWidth = textWidth("A");
 
         // Highlight the selected characters
-        List<PVector> selectedCharacters = getSelectedCharacters();
+        ArrayList<PVector> selectedCharacters = getSelectedCharacters();
         fill(highlightColor);
         for (PVector selectedCharacter : selectedCharacters) {
             // If selected character is below the viewport, ignore it

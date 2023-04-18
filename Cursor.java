@@ -441,7 +441,7 @@ public class Cursor extends PComponent implements EventIgnorer {
         return y == 0 && x == 0;
     }
 
-    private boolean onCharacter() {
+    public boolean onCharacter() {
         try {
             content.get(y).charAt(x);
             return true;
