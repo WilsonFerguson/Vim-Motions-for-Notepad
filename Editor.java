@@ -517,6 +517,7 @@ class Editor extends PComponent {
         }
         boolean changed = false;
         // TODO the end cursor position for C/c D/d is not fully correct
+        // TODO c and d should just delete highlighted area not full lines
         switch (motion) {
             case 'C':
                 deleteLines(uniqueLines);
