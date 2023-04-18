@@ -491,7 +491,7 @@ public class Cursor extends PComponent implements EventIgnorer {
 
     private PVector getTextPosition(int x, int y) {
         float textHeight = textAscent() + textDescent();
-        float yPosition = textHeight * y - textHeight("A") / 8; // Idk why it's 8, but it works
+        float yPosition = textHeight * y;
         if (content.get(y).length() == 0)
             return new PVector(0, yPosition);
 
@@ -522,7 +522,7 @@ public class Cursor extends PComponent implements EventIgnorer {
             return;
 
         PVector pos = getPos();
-        float lineHeight = textHeight("A");
+        float lineHeight = textAscent() + textDescent();
         if (mode == Mode.INSERT) {
             rect(pos.x, pos.y, 2, lineHeight);
         } else {

@@ -735,7 +735,33 @@ class Editor extends PComponent {
             case 'i':
             case 'a':
             case 'f':
+                char searchChar = motion;
+                if (numTimes != 1)
+                    searchChar = (char) ((char) numTimes + '0'); // apparently adding two chars returns an int, nice
+
+                if (cursor.x == content.get(cursor.y).length() - 1)
+                    return true; // Return true to clear the motion
+                String contentToSearch = content.get(cursor.y).substring(cursor.x + 1);
+                int index = contentToSearch.indexOf(searchChar);
+                if (index == -1)
+                    return true;
+
+                cursor.x += index + 1;
+                return true;
             case 'F':
+                searchChar = motion;
+                if (numTimes != 1)
+                    searchChar = (char) ((char) numTimes + '0');
+
+                if (cursor.x == 0)
+                    return true;
+                contentToSearch = content.get(cursor.y).substring(0, cursor.x);
+                index = contentToSearch.lastIndexOf(searchChar);
+                if (index == -1)
+                    return true;
+
+                cursor.x = index;
+                return true;
             case 'r':
         }
         return false;
@@ -807,12 +833,24 @@ class Editor extends PComponent {
         // (number?)(operator). Ex: 3dd, yy
         // (number?)(operator)(motion). Ex: ciw
 
-        int number2 = 1;
+        int number2 = 0;
         while (motion.length() > 0 && Character.isDigit(motion.charAt(0))) {
             number2 = number2 * 10 + parseInt(motion.substring(0, 1));
             motion = motion.substring(1);
         }
+        if (number2 == 0)
+            number2 = 1;
 
+        if ((operator == 'f' || operator == 'F') && this.motion.length() > 1) {
+            char charToFind = ' ';
+            if (motion.length() > 0)
+                charToFind = motion.charAt(0);
+
+            if (runMotion(number, operator, number2, charToFind)) {
+                this.motion = "";
+                return;
+            }
+        }
         if (motion.length() == 0) {
             // Example: 3d3 or 3d meaning it's not a valid motion
             return;
@@ -1285,7 +1323,7 @@ class Editor extends PComponent {
         drawLineNumbers();
 
         // Toggle cursor visibility
-        if (cursorBlinkSpeed > 0 && millis() - lastBlink > cursorBlinkSpeed) {
+        if (cursorBlinkSpeed > 0 && millis() - lastBlink > cursorBlinkSpeed && mode != Mode.VISUAL) {
             lastBlink = millis();
             cursor.toggleVisibility();
         }
