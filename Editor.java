@@ -238,7 +238,7 @@ class Editor extends PComponent {
 
     private boolean isMotion(char c) {
         // TODO this is such a hack
-        if (c == 'd' && mode == Mode.VISUAL)
+        if ((c == 'd' || c == 'c') && mode == Mode.VISUAL)
             return true;
 
         for (int i = 0; i < motions.length; i++)
@@ -464,6 +464,30 @@ class Editor extends PComponent {
             cursor.x = content.get(cursor.y).length();
     }
 
+    private void deleteCharacters(List<PVector> selectedCharacters) {
+        // Delete each character, move cursor to beginning of selection
+        for (int i = selectedCharacters.size() - 1; i >= 0; i--) {
+            PVector selectedCharacter = selectedCharacters.get(i);
+            String line = content.get((int) selectedCharacter.y);
+            line = line.substring(0, (int) selectedCharacter.x)
+                    + line.substring((int) min(selectedCharacter.x, line.length() - 1) + 1);
+
+            if (line.length() > 0)
+                content.set((int) selectedCharacter.y, line);
+            else
+                content.remove((int) selectedCharacter.y);
+        }
+
+        // Get left most endpoint
+        PVector start = visualEndpoints.get(0);
+        PVector end = visualEndpoints.get(1);
+        if (start.y > end.y || (start.y == end.y && start.x > end.x))
+            start = end;
+
+        cursor.x = (int) start.x;
+        cursor.y = (int) start.y;
+    }
+
     // TODO #7 refactor this, it's awful
     private boolean runContentModification(char motion) {
         if (mode == Mode.NORMAL) {
@@ -516,8 +540,7 @@ class Editor extends PComponent {
                 uniqueLines.add((int) selectedCharacter.y);
         }
         boolean changed = false;
-        // TODO the end cursor position for C/c D/d is not fully correct
-        // TODO c and d should just delete highlighted area not full lines
+
         switch (motion) {
             case 'C':
                 deleteLines(uniqueLines);
@@ -526,7 +549,7 @@ class Editor extends PComponent {
                 changed = true;
                 break;
             case 'c':
-                deleteLines(uniqueLines);
+                deleteCharacters(selectedCharacters);
                 mode = Mode.INSERT;
                 visualEndpoints.clear();
                 changed = true;
@@ -536,7 +559,7 @@ class Editor extends PComponent {
                 changed = true;
                 break;
             case 'd':
-                deleteLines(uniqueLines);
+                deleteCharacters(selectedCharacters);
                 changed = true;
                 break;
             case 'o':
@@ -560,29 +583,12 @@ class Editor extends PComponent {
                 visualSelectionIndex = visualSelectionIndex == 0 ? 1 : 0;
                 return true;
             case 's':
-                // Delete each character, move cursor to beginning of selection
-                for (int i = selectedCharacters.size() - 1; i >= 0; i--) {
-                    PVector selectedCharacter = selectedCharacters.get(i);
-                    String line = content.get((int) selectedCharacter.y);
-                    line = line.substring(0, (int) selectedCharacter.x)
-                            + line.substring((int) min(selectedCharacter.x, line.length() - 1) + 1);
-
-                    if (line.length() > 0)
-                        content.set((int) selectedCharacter.y, line);
-                    else
-                        content.remove((int) selectedCharacter.y);
-                }
-
-                // Get left most endpoint
-                PVector start = visualEndpoints.get(0);
-                PVector end = visualEndpoints.get(1);
-                if (start.y > end.y || (start.y == end.y && start.x > end.x))
-                    start = end;
-
-                cursor.x = (int) start.x;
-                cursor.y = (int) start.y;
-
+                deleteCharacters(selectedCharacters);
                 mode = Mode.INSERT;
+                changed = true;
+                break;
+            case 'x':
+                deleteCharacters(selectedCharacters);
                 changed = true;
                 break;
             case 'p':
@@ -607,32 +613,6 @@ class Editor extends PComponent {
                 }
 
                 cursor.pasteAfter();
-                changed = true;
-                break;
-            case 'x':
-                // Delete each character, move cursor to beginning of selection
-                for (int i = selectedCharacters.size() - 1; i >= 0; i--) {
-                    PVector selectedCharacter = selectedCharacters.get(i);
-                    String line = content.get((int) selectedCharacter.y);
-                    line = line.substring(0, (int) selectedCharacter.x)
-                            + line.substring((int) min(selectedCharacter.x, line.length() - 1) + 1);
-
-                    if (line.length() > 0)
-                        content.set((int) selectedCharacter.y, line);
-                    else
-                        content.remove((int) selectedCharacter.y);
-                }
-
-                // Get left most endpoint
-                // Is java an idiot? how the hell is this already defined in the scope of this
-                // function?
-                start = visualEndpoints.get(0);
-                end = visualEndpoints.get(1);
-                if (start.y > end.y || (start.y == end.y && start.x > end.x))
-                    start = end;
-
-                cursor.x = (int) start.x;
-                cursor.y = (int) start.y;
                 changed = true;
                 break;
         }
@@ -1079,7 +1059,6 @@ class Editor extends PComponent {
             percentage = "Bot";
         else
             percentage += "%";
-        // TODO make this based on the viewport's y instead of the cursor position.
 
         textAlign(TextAlignment.RIGHT);
         text(percentage, width - textWidth(percentage) / 2, 0);
