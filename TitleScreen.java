@@ -2,6 +2,7 @@ import java.io.File;
 import java.util.*;
 
 import library.core.*;
+import lorem.*;
 
 public class TitleScreen extends PComponent {
 
@@ -13,7 +14,13 @@ public class TitleScreen extends PComponent {
     // Keyboard inputs
     private String motion = "";
 
-    public TitleScreen() {
+    private boolean startUpScreen = true;
+    private String[] message;
+    private int messageIndex = 0;
+    private int filesDownloaded = 0;
+    private double internetSpeed = 80; // 0-100
+
+    public TitleScreen(boolean startUpScreen) {
         LinkedHashMap<String, String> properties = loadProperties("settings.properties");
         backgroundColor = color(properties.get("backgroundColor"));
         textColor = color(properties.get("textColor"));
@@ -29,10 +36,30 @@ public class TitleScreen extends PComponent {
 
         recentFiles = files.toArray(new String[files.size()]);
         saveStrings(recentFiles, "RecentFiles.txt");
+
+        this.startUpScreen = startUpScreen;
+        if (startUpScreen) {
+            if (!bool(properties.get("firstTimeScreen")))
+                this.startUpScreen = false;
+        }
+        if (startUpScreen) {
+            Lorem lorem = LoremIpsum.getInstance();
+
+            message = new String[100];
+            for (int i = 0; i < 100; i++) {
+                String line = "Downloading " + i + "% " + "Sourcing: " + lorem.getCountry() + " " + lorem.getCity()
+                        + " and referencing: " + lorem.getFirstName() + " " + lorem.getLastName();
+                message[i] = line;
+            }
+        }
     }
 
     public String getState() {
         return state;
+    }
+
+    public boolean isStartUpScreen() {
+        return startUpScreen;
     }
 
     private void drawRecentFile(String file, int index) {
@@ -99,7 +126,7 @@ public class TitleScreen extends PComponent {
         text(text, commandX + commandWidth / 2 + margin, y);
     }
 
-    public void draw() {
+    private void drawTitleScreen() {
         background(backgroundColor);
         textSize(0.065 * width / 4);
 
@@ -109,11 +136,8 @@ public class TitleScreen extends PComponent {
             drawRecentFile(recentFiles[i], i);
         }
 
-        // drawCommand("New file", 't', width / 4, height / 2 + height / 4);
-        // drawCommand("Open file", 'e', width / 2, height / 2 + height / 4);
-        // drawCommand("Delete file", 'd', width * 3 / 4, height / 2 + height / 4);
         float y = height / 2 + height / 4;
-        HashMap<String, Character> commands = new HashMap<>();
+        LinkedHashMap<String, Character> commands = new LinkedHashMap<>();
         commands.put("New file", 't');
         commands.put("Open file", 'e');
         commands.put("Delete file", 'd');
@@ -126,8 +150,79 @@ public class TitleScreen extends PComponent {
             drawCommand(command, commands.get(command), x, y);
             i++;
         }
+    }
+
+    private void drawMessage() {
+        push();
+        float lineHeight = textAscent() + textDescent();
+        translate(0, lineHeight / 2); // Move text down so that the top is at y = 0
+        // If the message is too long, translate everything up
+        float bottom = height * 2 / 3;
+        if (lineHeight * messageIndex > bottom) {
+            translate(0, -lineHeight * (messageIndex - bottom / lineHeight));
+        }
+
+        for (int i = 0; i < message.length; i++) {
+            if (i > messageIndex)
+                break;
+            text(message[i], 0, 0);
+            translate(0, lineHeight);
+        }
+        if (random(1) < map(internetSpeed, 0, 100, 0, 0.9)) {
+            messageIndex++;
+        }
+        pop();
+    }
+
+    private void drawStartUpScreen() {
+        background(backgroundColor);
+        LinkedHashMap<String, String> properties = loadProperties("settings.properties");
+        textSize(parseInt(properties.get("fontSize")) * 0.75);
+        fill(textColor);
+        noStroke();
+
+        if (messageIndex < message.length)
+            drawMessage();
+        else {
+            float lineHeight = textAscent() + textDescent();
+            translate(0, lineHeight / 2);
+
+            text("Connection to the US government complete.", 0, 0);
+            translate(0, lineHeight);
+            text("Please wait, some files failed to download and need to be retried.", 0, 0);
+
+            int filesToDownload = 10;
+            for (int i = 0; i < filesDownloaded; i++) {
+                translate(0, lineHeight);
+                int fileNumber = i + 1;
+                String text = "Finished downloading file " + fileNumber + " of " + filesToDownload;
+                if (fileNumber > filesToDownload)
+                    text += " :)";
+                text(text, 0, 0);
+            }
+            if (filesDownloaded <= filesToDownload) {
+                if (random(1) < map(internetSpeed, 0, 100, 0, 0.05))
+                    filesDownloaded++;
+            } else {
+                translate(0, lineHeight);
+                text("Finished downloading the remaining viruses.", 0, 0);
+                translate(0, lineHeight * 2);
+                text("You are good to go! To get started, press \"enter\" to go to the title screen.", 0, 0);
+                translate(0, lineHeight);
+                text("If you are ever stuck, type \":help\" or \"?\" to pull up the doc", 0, 0);
+
+            }
+        }
+    }
+
+    public void draw() {
+        if (startUpScreen)
+            drawStartUpScreen();
+        else
+            drawTitleScreen();
 
         // Draw the motion
+        textSize(0.065 * width / 4);
         textAlign(LEFT);
         fill(textColor);
         text(motion, 0, height - textHeight(motion));
@@ -138,6 +233,15 @@ public class TitleScreen extends PComponent {
         if (state.length() > 0)
             return;
 
+        if (startUpScreen) {
+            if (keyString.equals("Enter")) {
+                startUpScreen = false;
+                LinkedHashMap<String, String> properties = loadProperties("settings.properties");
+                properties.put("firstTimeScreen", "false");
+                saveProperties(properties, "settings.properties");
+            }
+        }
+
         if (keyString.equals("Backspace")) {
             if (motion.length() > 0)
                 motion = motion.substring(0, motion.length() - 1);
@@ -147,7 +251,15 @@ public class TitleScreen extends PComponent {
             motion = "";
             return;
         }
-        if (keyString.length() > 1 && !keyString.equals("Semicolon"))
+        if (keyString.equals("Enter")) {
+            if (handleCommand()) {
+                motion = "";
+                return;
+            }
+        }
+
+        String[] allowedKeys = { "Semicolon", "Slash" };
+        if (keyString.length() > 1 && !Arrays.asList(allowedKeys).contains(keyString))
             return;
 
         motion += Character.toLowerCase(key);
@@ -178,16 +290,16 @@ public class TitleScreen extends PComponent {
 
         switch (newMotion) {
             case "q":
-                exit();
-                return true;
             case "wq":
-                exit();
-                return true;
             case "q!":
+            case "qa!":
+            case "qa":
+            case "wqa":
                 exit();
                 return true;
-            case "qa":
-                exit();
+            case "help":
+                openInBrowser(
+                        "https://docs.google.com/document/d/1fQ1oPZZzbYpaEFzKpX9-POfc1pGENRN_j8IovHwYWak/edit?usp=sharing");
                 return true;
         }
 
@@ -261,10 +373,13 @@ public class TitleScreen extends PComponent {
             case "o":
                 state = "open";
                 break;
+            case "?":
+                openInBrowser(
+                        "https://docs.google.com/document/d/1fQ1oPZZzbYpaEFzKpX9-POfc1pGENRN_j8IovHwYWak/edit?usp=sharing");
+                motion = "";
+                break;
             default:
                 if (handleNumber())
-                    break;
-                if (handleCommand())
                     break;
                 if (handleDeletion())
                     break;

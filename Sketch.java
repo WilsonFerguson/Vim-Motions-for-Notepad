@@ -25,7 +25,7 @@ class Sketch extends Applet {
         setTitle("Vim Motions for Notepad");
         exitOnEscape(false);
 
-        title = new TitleScreen();
+        title = new TitleScreen(true);
     }
 
     public void draw() {
@@ -51,7 +51,7 @@ class Sketch extends Applet {
                         editor = new Editor(this);
                         if (!editor.openExplorer()) {
                             editor = null;
-                            title = new TitleScreen();
+                            title = new TitleScreen(false);
                             return;
                         }
                         break;
@@ -71,7 +71,7 @@ class Sketch extends Applet {
     public void setState(int state) {
         this.state = state;
         if (state == 0) {
-            title = new TitleScreen();
+            title = new TitleScreen(false);
             editor = null;
         } else if (state == 1) {
             editor = new Editor(this);

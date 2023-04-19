@@ -157,30 +157,6 @@ class Editor extends PComponent {
         char keyToWrite = key;
         switch (keyString) {
             case "Backspace":
-                // TODO - this will probably break with multi cursors cause if you delete a line
-                // then the next cursor will be on the wrong line
-                if (keysPressed.contains("Ctrl")) {
-                    int previousX = cursor.x;
-                    int previousY = cursor.y;
-                    cursor.previousWord();
-                    if (previousX == cursor.x && previousY == cursor.y)
-                        return;
-
-                    int x = cursor.x;
-                    int y = cursor.y;
-
-                    if (x == 0) {
-                        content.set(y - 1, content.get(y - 1) + content.get(y));
-                        content.remove(y);
-                        cursor.y--;
-                        cursor.x = content.get(y - 1).length();
-                        return;
-                    }
-
-                    content.set(y, content.get(y).substring(0, x - 1) + content.get(y).substring(x));
-
-                    return;
-                }
                 int x = parseInt(cursor.x);
                 int y = parseInt(cursor.y);
                 if (x == 0 && y == 0)
@@ -1055,6 +1031,9 @@ class Editor extends PComponent {
                 break;
             case "R":
                 redo();
+                break;
+            case "Backspace":
+                // TODO implement this
                 break;
         }
     }
