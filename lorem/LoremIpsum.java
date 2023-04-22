@@ -308,7 +308,7 @@ public class LoremIpsum implements Lorem {
 	public String getUrl() {
 		StringBuilder sb = new StringBuilder();
 		int hostId = random.nextInt(URL_HOSTS.length);
-		String host = String.format(URL_HOSTS[hostId], getWords(1));
+		String host = String.format(URL_HOSTS[hostId], String.join("%20%", getWords(3).split(" ")));
 		sb.append(host);
 		return sb.toString();
 	}

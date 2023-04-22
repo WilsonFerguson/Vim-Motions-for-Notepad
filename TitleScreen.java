@@ -18,7 +18,7 @@ public class TitleScreen extends PComponent {
     private String[] message;
     private int messageIndex = 0;
     private int filesDownloaded = 0;
-    private double internetSpeed = 80; // 0-100
+    private double internetSpeed = 70; // 0-100
 
     public TitleScreen(boolean startUpScreen) {
         LinkedHashMap<String, String> properties = loadProperties("settings.properties");
@@ -47,8 +47,11 @@ public class TitleScreen extends PComponent {
 
             message = new String[100];
             for (int i = 0; i < 100; i++) {
-                String line = "Downloading " + i + "% " + "Sourcing: " + lorem.getCountry() + " " + lorem.getCity()
-                        + " and referencing: " + lorem.getFirstName() + " " + lorem.getLastName();
+                // String line = "Downloading " + i + "% " + "Sourcing: " + lorem.getCountry() +
+                // " " + lorem.getCity()
+                // + " and referencing: " + lorem.getFirstName() + " " + lorem.getLastName();
+                String line = "Downloading " + i + "% ";
+                line += lorem.getUrl();
                 message[i] = line;
             }
         }
