@@ -47,9 +47,6 @@ public class TitleScreen extends PComponent {
 
             message = new String[100];
             for (int i = 0; i < 100; i++) {
-                // String line = "Downloading " + i + "% " + "Sourcing: " + lorem.getCountry() +
-                // " " + lorem.getCity()
-                // + " and referencing: " + lorem.getFirstName() + " " + lorem.getLastName();
                 String line = "Downloading " + i + "% ";
                 line += lorem.getUrl();
                 message[i] = line;
