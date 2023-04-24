@@ -388,6 +388,8 @@ public class Cursor extends PComponent implements EventIgnorer {
     }
 
     private CharType getCharType(int x, int y) {
+        if (y >= content.size() || y < 0 || x >= content.get(y).length() || x < 0)
+            return null;
         char c = content.get(y).charAt(x);
 
         if (Character.isLetter(c))
@@ -470,7 +472,8 @@ public class Cursor extends PComponent implements EventIgnorer {
     }
 
     public String getWordWithPunctuation() {
-        if (getCharType(x, y) == CharType.SPACE)
+        CharType charType = getCharType(x, y);
+        if (charType == CharType.SPACE || charType == null)
             return "";
 
         Cursor position = copy(); // Save the position of the cursor to restore it later
@@ -488,6 +491,30 @@ public class Cursor extends PComponent implements EventIgnorer {
             nextSpace = content.get(y).length();
 
         String word = content.get(y).substring(x, nextSpace);
+        x = position.x;
+        y = position.y;
+        return word;
+    }
+
+    public String getWord() {
+        CharType charType = getCharType(x, y);
+        if (charType == CharType.SPACE || charType == null)
+            return "";
+
+        Cursor position = copy();
+
+        // Move to the start of the word
+        if (x > 0) {
+            if (getCharType(x - 1, y) != CharType.SPACE) {
+                previousWord();
+            }
+        }
+
+        int startX = x;
+        nextWord();
+
+        String word = content.get(y).substring(startX, (int) toPVector().x);
+
         x = position.x;
         y = position.y;
         return word;
