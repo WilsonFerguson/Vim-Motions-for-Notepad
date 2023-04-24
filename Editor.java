@@ -50,12 +50,17 @@ class Editor extends PComponent {
     // Motions
     private String motion = "";
     private String previousMotion = "";
-    // TODO - add "u"
-    private char[] operators = { 'c', 'd', 'y', 'i', 'a', 'f', 'F', 'r' }; // TODO - add g, <, >, z
-    private char[] motions = { 'i', 'a', 'I', 'A', 'w', 'b', 'W', 'B', 'C', 'D', 'e', 'E', 'h', 'j', 'k', 'l', '%', '0',
-            '_', '^', '$',
-            'G', 's', 'p', 'P', 'x', 'o', 'O', '.', 'u' };
-    private char[] commands = { ':', '/', '?', '*' }; // TODO - add others?
+
+    private char[] operatorsNormal = { 'c', 'd', 'y', 'r' };
+    private char[] operatorsVisual = { 'y', 'i', 'a', 'r' };
+    private char[] operatorsGeneric = { 'f', 'F' }; // TODO - add g, <, >, z
+
+    private char[] motionsNormal = { 'i', 'a', 'C', 'D', 's', 'p', 'P', 'x', 'o', 'O' };
+    private char[] motionsVisual = { 'c', 'd', 'C', 'D', 's', 'p', 'P', 'x', 'o', 'O' };
+    private char[] motionsGeneric = { 'I', 'A', 'w', 'b', 'W', 'B', 'e', 'E', 'h', 'j', 'k', 'l', '%', '0', '_', '^',
+            '$', 'G', '.', 'u' };
+
+    private char[] commands = { ':', '/', '?', '*' };
 
     public Editor(Sketch sketch) {
         this.sketch = sketch;
@@ -236,21 +241,52 @@ class Editor extends PComponent {
     }
 
     private boolean isOperator(char c) {
-        for (int i = 0; i < operators.length; i++)
-            if (c == operators[i])
+        for (char operator : operatorsGeneric)
+            if (c == operator)
+                return true;
+
+        if (mode == Mode.VISUAL) {
+            for (char operator : operatorsVisual)
+                if (c == operator)
+                    return true;
+        } else if (mode == Mode.NORMAL) {
+            for (char operator : operatorsNormal)
+                if (c == operator)
+                    return true;
+        }
+
+        return false;
+    }
+
+    private boolean isMotionGeneric(char c) {
+        for (char motion : motionsGeneric)
+            if (c == motion)
+                return true;
+
+        return false;
+    }
+
+    private boolean isOperatorGeneric(char c) {
+        for (char operator : operatorsGeneric)
+            if (c == operator)
                 return true;
 
         return false;
     }
 
     private boolean isMotion(char c) {
-        // TODO this is such a hack
-        if ((c == 'd' || c == 'c') && mode == Mode.VISUAL)
+        if (isMotionGeneric(c))
             return true;
 
-        for (int i = 0; i < motions.length; i++)
-            if (c == motions[i])
-                return true;
+        if (mode == Mode.VISUAL) {
+            for (char motion : motionsVisual)
+                if (c == motion)
+                    return true;
+        } else if (mode == Mode.NORMAL) {
+            for (char motion : motionsNormal)
+                if (c == motion)
+                    return true;
+        }
 
         return false;
     }
@@ -469,6 +505,8 @@ class Editor extends PComponent {
         }
         // If cursor is to far to the right of the its current line, move it to the end
         // of the line
+        if (content.size() == 0)
+            content.add("");
         if (cursor.x > content.get(cursor.y).length())
             cursor.x = content.get(cursor.y).length();
     }
@@ -497,10 +535,88 @@ class Editor extends PComponent {
         cursor.y = (int) start.y;
     }
 
-    // TODO #7 refactor this, it's awful
-    private boolean runContentModification(char motion) {
+    private boolean runMotion(char motion) {
+        if (isMotionGeneric(motion)) {
+            switch (motion) {
+                case 'I':
+                    mode = Mode.INSERT;
+                    cursor.findFirstNonWhitespace();
+                    return true;
+                case 'A':
+                    mode = Mode.INSERT;
+                    cursor.findLastNonWhitespace();
+                    return true;
+                case 'w':
+                    cursor.nextWord();
+                    return true;
+                case 'b':
+                    cursor.previousWord();
+                    return true;
+                case 'W':
+                    cursor.nextWordWithPunctuation();
+                    return true;
+                case 'B':
+                    cursor.previousWordWithPunctuation();
+                    return true;
+                case 'e':
+                    cursor.endOfWord();
+                    return true;
+                case 'E':
+                    cursor.endOfWordWithPunctuation();
+                    return true;
+                case 'h':
+                    cursor.left();
+                    return true;
+                case 'j':
+                    cursor.down();
+                    return true;
+                case 'k':
+                    cursor.up();
+                    return true;
+                case 'l':
+                    cursor.right();
+                    return true;
+                case '%':
+                    cursor.findMatchingBracket();
+                    return true;
+                case '0':
+                    cursor.x = 0;
+                    return true;
+                case '_':
+                    cursor.findFirstNonWhitespace();
+                    return true;
+                case '^':
+                    cursor.findFirstNonWhitespace();
+                    return true;
+                case '$':
+                    cursor.x = cursor.getEndOfLine();
+                    return true;
+                case 'G':
+                    cursor.y = content.size() - 1;
+                    cursor.x = cursor.getEndOfLine();
+                    return true;
+                case '.':
+                    this.motion = previousMotion;
+                    parseMotion();
+                    this.motion = "";
+                    return true;
+                case 'u':
+                    undo();
+                    return true;
+                case default:
+                    return false;
+            }
+        }
+
         if (mode == Mode.NORMAL) {
             switch (motion) {
+                case 'i':
+                    mode = Mode.INSERT;
+                    return true;
+                case 'a':
+                    mode = Mode.INSERT;
+                    cursor.right();
+                    return true;
                 case 'C':
                     cursor.deleteToLineEnd();
                     mode = Mode.INSERT;
@@ -508,16 +624,6 @@ class Editor extends PComponent {
                     return true;
                 case 'D':
                     cursor.deleteToLineEnd();
-                    fileSaved = false;
-                    return true;
-                case 'o':
-                    cursor.newLineBelow();
-                    mode = Mode.INSERT;
-                    fileSaved = false;
-                    return true;
-                case 'O':
-                    cursor.newLineAbove();
-                    mode = Mode.INSERT;
                     fileSaved = false;
                     return true;
                 case 's':
@@ -535,6 +641,16 @@ class Editor extends PComponent {
                     return true;
                 case 'x':
                     cursor.deleteCurrentCharacter();
+                    fileSaved = false;
+                    return true;
+                case 'o':
+                    cursor.newLineBelow();
+                    mode = Mode.INSERT;
+                    fileSaved = false;
+                    return true;
+                case 'O':
+                    cursor.newLineAbove();
+                    mode = Mode.INSERT;
                     fileSaved = false;
                     return true;
             }
@@ -567,26 +683,6 @@ class Editor extends PComponent {
                 deleteCharacters(selectedCharacters);
                 changed = true;
                 break;
-            case 'o':
-                if (cursor.toPVector().equals(visualEndpoints.get(0))) {
-                    cursor.x = (int) visualEndpoints.get(1).x;
-                    cursor.y = (int) visualEndpoints.get(1).y;
-                } else {
-                    cursor.x = (int) visualEndpoints.get(0).x;
-                    cursor.y = (int) visualEndpoints.get(0).y;
-                }
-                visualSelectionIndex = visualSelectionIndex == 0 ? 1 : 0;
-                return true;
-            case 'O':
-                if (cursor.toPVector().equals(visualEndpoints.get(0))) {
-                    cursor.x = (int) visualEndpoints.get(1).x;
-                    cursor.y = (int) visualEndpoints.get(1).y;
-                } else {
-                    cursor.x = (int) visualEndpoints.get(0).x;
-                    cursor.y = (int) visualEndpoints.get(0).y;
-                }
-                visualSelectionIndex = visualSelectionIndex == 0 ? 1 : 0;
-                return true;
             case 's':
                 deleteCharacters(selectedCharacters);
                 mode = Mode.INSERT;
@@ -620,6 +716,26 @@ class Editor extends PComponent {
                 cursor.pasteAfter();
                 changed = true;
                 break;
+            case 'o':
+                if (cursor.toPVector().equals(visualEndpoints.get(0))) {
+                    cursor.x = (int) visualEndpoints.get(1).x;
+                    cursor.y = (int) visualEndpoints.get(1).y;
+                } else {
+                    cursor.x = (int) visualEndpoints.get(0).x;
+                    cursor.y = (int) visualEndpoints.get(0).y;
+                }
+                visualSelectionIndex = visualSelectionIndex == 0 ? 1 : 0;
+                return true;
+            case 'O':
+                if (cursor.toPVector().equals(visualEndpoints.get(0))) {
+                    cursor.x = (int) visualEndpoints.get(1).x;
+                    cursor.y = (int) visualEndpoints.get(1).y;
+                } else {
+                    cursor.x = (int) visualEndpoints.get(0).x;
+                    cursor.y = (int) visualEndpoints.get(0).y;
+                }
+                visualSelectionIndex = visualSelectionIndex == 0 ? 1 : 0;
+                return true;
         }
         if (changed) {
             if (mode == Mode.VISUAL) {
@@ -630,85 +746,6 @@ class Editor extends PComponent {
             return true;
         }
         return false;
-    }
-
-    private boolean runMotion(char motion) {
-        switch (motion) {
-            case 'i':
-                mode = Mode.INSERT;
-                return true;
-            case 'a':
-                mode = Mode.INSERT;
-                cursor.right();
-                return true;
-            case 'I':
-                mode = Mode.INSERT;
-                cursor.findFirstNonWhitespace();
-                return true;
-            case 'A':
-                mode = Mode.INSERT;
-                cursor.findLastNonWhitespace();
-                return true;
-            case 'w':
-                cursor.nextWord();
-                return true;
-            case 'b':
-                cursor.previousWord();
-                return true;
-            case 'W':
-                cursor.nextWordWithPunctuation();
-                return true;
-            case 'B':
-                cursor.previousWordWithPunctuation();
-                return true;
-            case 'e':
-                cursor.endOfWord();
-                return true;
-            case 'E':
-                cursor.endOfWordWithPunctuation();
-                return true;
-            case 'h':
-                cursor.left();
-                return true;
-            case 'j':
-                cursor.down();
-                return true;
-            case 'k':
-                cursor.up();
-                return true;
-            case 'l':
-                cursor.right();
-                return true;
-            case '%':
-                cursor.findMatchingBracket();
-                return true;
-            case '0':
-                cursor.x = 0;
-                return true;
-            case '_':
-                cursor.findFirstNonWhitespace();
-                return true;
-            case '^':
-                cursor.findFirstNonWhitespace();
-                return true;
-            case '$':
-                cursor.x = cursor.getEndOfLine();
-                return true;
-            case 'G':
-                cursor.y = content.size() - 1;
-                cursor.x = cursor.getEndOfLine();
-                return true;
-            case '.':
-                this.motion = previousMotion;
-                parseMotion();
-                this.motion = "";
-                return true;
-            case 'u':
-                undo();
-                return true;
-            default:
-                return false;
-        }
     }
 
     // w, 3b, etc.
@@ -722,25 +759,47 @@ class Editor extends PComponent {
         return true;
     }
 
-    // o, p, x, etc.
-    private boolean runContentModification(int numTimes, char motion) {
-        for (int i = 0; i < numTimes; i++) {
-            boolean result = runContentModification(motion);
-            if (!result)
-                return false;
-        }
-
-        return true;
-    }
-
     // dw, d3w, 3cw, etc.
     private boolean runMotion(int numTimesTotal, char operator, int numTimes, char motion) {
-        // TODO - implement
-        switch (operator) {
-            case 'c':
-            case 'd':
-            case 'y':
-                if (mode == Mode.VISUAL) {
+        // TODO implement the rest of these
+        if (isOperatorGeneric(operator)) {
+            switch (operator) {
+                case 'f':
+                    char searchChar = motion;
+                    if (numTimes != 1)
+                        searchChar = (char) ((char) numTimes + '0'); // apparently adding two chars returns an int, nice
+
+                    if (cursor.x == content.get(cursor.y).length() - 1)
+                        return true; // Return true to clear the motion
+                    String contentToSearch = content.get(cursor.y).substring(cursor.x + 1);
+                    int index = contentToSearch.indexOf(searchChar);
+                    if (index == -1)
+                        return true;
+
+                    cursor.x += index + 1;
+                    return true;
+                case 'F':
+                    searchChar = motion;
+                    if (numTimes != 1)
+                        searchChar = (char) ((char) numTimes + '0');
+
+                    if (cursor.x == 0)
+                        return true;
+                    contentToSearch = content.get(cursor.y).substring(0, cursor.x);
+                    index = contentToSearch.lastIndexOf(searchChar);
+                    if (index == -1)
+                        return true;
+
+                    cursor.x = index;
+                    return true;
+                case default:
+                    return false;
+            }
+        }
+
+        if (mode == Mode.VISUAL) {
+            switch (operator) {
+                case 'y':
                     ArrayList<Integer> lines = getSelectedCharactersLines();
                     String[] linesArray = new String[lines.size()];
                     PVector[] endpoints = getSortedVisualEndpoints();
@@ -766,43 +825,31 @@ class Editor extends PComponent {
                     copyToClipboard(text);
                     mode = Mode.NORMAL;
                     return true;
-                }
+                case 'i':
+                case 'a':
+                case 'r':
+                    ArrayList<PVector> selectedCharacters = getSelectedCharacters();
+                    char searchChar = motion;
+                    if (numTimes != 1)
+                        searchChar = (char) ((char) numTimes + '0');
 
-                // TODO implement for normal mode
-                mode = Mode.NORMAL;
-                return true;
-            case 'i':
-            case 'a':
-            case 'f':
-                char searchChar = motion;
-                if (numTimes != 1)
-                    searchChar = (char) ((char) numTimes + '0'); // apparently adding two chars returns an int, nice
-
-                if (cursor.x == content.get(cursor.y).length() - 1)
-                    return true; // Return true to clear the motion
-                String contentToSearch = content.get(cursor.y).substring(cursor.x + 1);
-                int index = contentToSearch.indexOf(searchChar);
-                if (index == -1)
+                    for (PVector c : selectedCharacters) {
+                        String line = content.get((int) c.y);
+                        line = line.substring(0, (int) c.x) + searchChar + line.substring((int) c.x + 1);
+                        content.set((int) c.y, line);
+                    }
                     return true;
+            }
+            return false;
+        }
 
-                cursor.x += index + 1;
-                return true;
-            case 'F':
-                searchChar = motion;
-                if (numTimes != 1)
-                    searchChar = (char) ((char) numTimes + '0');
-
-                if (cursor.x == 0)
-                    return true;
-                contentToSearch = content.get(cursor.y).substring(0, cursor.x);
-                index = contentToSearch.lastIndexOf(searchChar);
-                if (index == -1)
-                    return true;
-
-                cursor.x = index;
-                return true;
+        // Normal mode
+        switch (operator) {
+            case 'c':
+            case 'd':
+            case 'y':
             case 'r':
-                searchChar = motion;
+                char searchChar = motion;
                 if (numTimes != 1)
                     searchChar = (char) ((char) numTimes + '0');
 
@@ -813,8 +860,9 @@ class Editor extends PComponent {
                 line = line.substring(0, cursor.x) + searchChar + line.substring(cursor.x + 1);
                 content.set(cursor.y, line);
                 return true;
+            case default:
+                return false;
         }
-        return false;
     }
 
     // dd, 3yy, 2d2d
@@ -850,6 +898,9 @@ class Editor extends PComponent {
             number = number * 10 + parseInt(motion.substring(0, 1));
             motion = motion.substring(1);
         }
+        // Handle case where motion is just 0
+        if (number == 0 && motion.length() == 0)
+            motion = this.motion;
         if (number == 0)
             number = 1;
 
@@ -865,8 +916,6 @@ class Editor extends PComponent {
         char c = motion.charAt(0);
         if (isMotion(c)) {
             if (runMotion(number, c))
-                this.motion = "";
-            else if (runContentModification(number, c))
                 this.motion = "";
             return;
         }
