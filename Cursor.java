@@ -504,14 +504,13 @@ public class Cursor extends PComponent implements EventIgnorer {
         Cursor position = copy();
 
         // Move to the start of the word
-        if (x > 0) {
-            if (getCharType(x - 1, y) != CharType.SPACE) {
-                previousWord();
-            }
-        }
+        while (x > 0 && getCharType(x - 1, y) == charType)
+            left();
 
         int startX = x;
         nextWord();
+        if (x == startX)
+            x++;
 
         String word = content.get(y).substring(startX, (int) toPVector().x);
 
