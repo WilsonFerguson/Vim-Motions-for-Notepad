@@ -2,6 +2,7 @@ import java.io.*;
 import java.util.*;
 
 import javax.swing.JFileChooser;
+import javax.swing.UIManager;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import library.core.*;
@@ -93,6 +94,10 @@ class Editor extends PComponent {
         viewportOffset = defaultViewportOffset.copy();
 
         setTitle("Untitled");
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+        }
     }
 
     private void readProperties() {
