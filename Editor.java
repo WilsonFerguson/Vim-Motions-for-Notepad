@@ -608,9 +608,10 @@ class Editor extends PComponent {
                 case 'u':
                     undo();
                     return true;
-                case default:
-                    return false;
+                // case default:
+                // return false;
             }
+            return false;
         }
 
         if (mode == Mode.NORMAL) {
@@ -756,7 +757,11 @@ class Editor extends PComponent {
     // w, 3b, etc.
     private boolean runMotion(int numTimes, char motion) {
         for (int i = 0; i < numTimes; i++) {
+            Mode previousMode = mode;
             boolean result = runMotion(motion);
+            if (i < numTimes - 1)
+                mode = previousMode;
+
             if (!result)
                 return false;
         }
@@ -797,9 +802,10 @@ class Editor extends PComponent {
 
                     cursor.x = index;
                     return true;
-                case default:
-                    return false;
+                // case default:
+                // return false;
             }
+            return false;
         }
 
         if (mode == Mode.VISUAL) {
@@ -865,9 +871,10 @@ class Editor extends PComponent {
                 line = line.substring(0, cursor.x) + searchChar + line.substring(cursor.x + 1);
                 content.set(cursor.y, line);
                 return true;
-            case default:
-                return false;
+            // case default:
+            // return false;
         }
+        return false;
     }
 
     // dd, 3yy, 2d2d
