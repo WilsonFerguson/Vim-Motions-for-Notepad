@@ -54,14 +54,21 @@ class Editor extends PComponent {
 
     private char[] operatorsNormal = { 'c', 'd', 'y', 'r' };
     private char[] operatorsVisual = { 'y', 'i', 'a', 'r' };
-    private char[] operatorsGeneric = { 'f', 'F' }; // TODO - add g, <, >, z
+    private char[] operatorsGeneric = { 'f', 'F', 'q', '@' }; // TODO - add g, <, >, z
 
     private char[] motionsNormal = { 'i', 'a', 'C', 'D', 's', 'p', 'P', 'x', 'o', 'O' };
     private char[] motionsVisual = { 'c', 'd', 'C', 'D', 's', 'p', 'P', 'x', 'o', 'O' };
     private char[] motionsGeneric = { 'I', 'A', 'w', 'b', 'W', 'B', 'e', 'E', 'h', 'j', 'k', 'l', '%', '0', '_', '^',
-            '$', 'G', '.', 'u' };
+            '$', 'G', '.', 'u', 'q' };
 
     private char[] commands = { ':', '/', '?', '*' };
+
+    // Macros
+    private HashMap<Character, String> macros = new HashMap<>();
+    private char previousMacro = ' ';
+    private boolean recordingMacro = false;
+    private String macro = "";
+    private char macroKey = ' ';
 
     public Editor(Sketch sketch) {
         this.sketch = sketch;
@@ -264,9 +271,13 @@ class Editor extends PComponent {
     }
 
     private boolean isMotionGeneric(char c) {
-        for (char motion : motionsGeneric)
+        // Special case for recording macros
+        if (c == 'q')
+            return recordingMacro;
+        for (char motion : motionsGeneric) {
             if (c == motion)
                 return true;
+        }
 
         return false;
     }
@@ -608,6 +619,12 @@ class Editor extends PComponent {
                 case 'u':
                     undo();
                     return true;
+                case 'q':
+                    // This case will only happen if they press q and are recording a macro
+                    recordingMacro = false;
+                    macros.put(macroKey, macro);
+                    macro = "";
+                    return true;
                 // case default:
                 // return false;
             }
@@ -802,6 +819,27 @@ class Editor extends PComponent {
 
                     cursor.x = index;
                     return true;
+                case 'q':
+                    macroKey = motion;
+                    recordingMacro = true;
+                    return true;
+                case '@':
+                    char key = motion;
+                    if (motion == '@')
+                        key = previousMacro;
+                    String macro = macros.get(key);
+                    if (macro == null)
+                        return true;
+
+                    for (int i = 0; i < numTimes; i++) {
+                        for (int j = 0; j < macro.length(); j++) {
+                            runMotion(macro.charAt(j));
+                        }
+                    }
+
+                    if (motion != '@')
+                        previousMacro = motion;
+                    return true;
                 // case default:
                 // return false;
             }
@@ -979,6 +1017,13 @@ class Editor extends PComponent {
         // (operator). Ex: 3dd, yy
         // (operator)(motion). Ex: ciw
 
+        // First check for macro
+        if (operator == 'q' || operator == '@') {
+            if (runMotion(number, operator, number2, motion.charAt(0)))
+                this.motion = "";
+            return;
+        }
+
         char c2 = motion.charAt(0);
         if (isMotion(c2)) {
             if (runMotion(number, operator, number2, c2))
@@ -1054,6 +1099,8 @@ class Editor extends PComponent {
         }
 
         motion += key;
+        if (recordingMacro)
+            macro += key;
         if (errorMessage.length() > 0)
             errorMessage = "";
         String initialMotion = String.valueOf(motion);
