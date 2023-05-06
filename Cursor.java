@@ -93,6 +93,13 @@ public class Cursor extends PComponent implements EventIgnorer {
             x = getEndOfLine();
     }
 
+    public void constrain() {
+        y = max(y, 0);
+        y = min(y, content.size() - 1);
+        x = max(x, 0);
+        x = min(x, getEndOfLine());
+    }
+
     public void findLastNonWhitespace() {
         x = findLastNonWhitespace(content.get(y));
     }
@@ -352,6 +359,8 @@ public class Cursor extends PComponent implements EventIgnorer {
 
     public void pasteAfter() {
         String data = getClipboardContents();
+        if (data == null)
+            return;
         String[] lines = data.split("\n");
         for (int i = 0; i < lines.length; i++) {
             content.add(y + i + 1, lines[i]);
@@ -362,6 +371,8 @@ public class Cursor extends PComponent implements EventIgnorer {
 
     public void pasteBefore() {
         String data = getClipboardContents();
+        if (data == null)
+            return;
         String[] lines = data.split("\n");
         for (int i = 0; i < lines.length; i++) {
             int index = y - (lines.length - i);

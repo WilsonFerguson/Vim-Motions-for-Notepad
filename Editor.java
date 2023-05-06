@@ -538,8 +538,15 @@ class Editor extends PComponent {
 
             if (line.length() > 0)
                 content.set((int) selectedCharacter.y, line);
-            else
+            else {
                 content.remove((int) selectedCharacter.y);
+
+                // If this line is above or at the cursor, move the cursor up one
+                if (selectedCharacter.y < cursor.y
+                        || (selectedCharacter.y == cursor.y && cursor.y == content.size())) {
+                    cursor.up();
+                }
+            }
         }
 
         // Get left most endpoint
@@ -550,6 +557,9 @@ class Editor extends PComponent {
 
         cursor.x = (int) start.x;
         cursor.y = (int) start.y;
+
+        // Constrain the cursor
+        cursor.constrain();
     }
 
     private boolean runMotion(char motion) {
@@ -924,7 +934,11 @@ class Editor extends PComponent {
         if (firstOperator != secondOperator)
             return false;
 
-        // TODO - implement
+        this.motion = "";
+        for (int i = 0; i < numTimesTotal; i++) {
+            simulateKeyPress('V');
+            simulateKeyPress(firstOperator);
+        }
         return false;
     }
 
