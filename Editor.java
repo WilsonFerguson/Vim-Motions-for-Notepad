@@ -786,6 +786,11 @@ class Editor extends PComponent {
 
     // w, 3b, etc.
     private boolean runMotion(int numTimes, char motion) {
+        // In vim if you are in visual mode it just ignores numTimes
+        if (mode == Mode.VISUAL) {
+            return runMotion(motion);
+        }
+
         for (int i = 0; i < numTimes; i++) {
             Mode previousMode = mode;
             boolean result = runMotion(motion);
@@ -846,7 +851,7 @@ class Editor extends PComponent {
 
                     this.motion = "";
 
-                    for (int i = 0; i < numTimes; i++) {
+                    for (int i = 0; i < numTimesTotal; i++) {
                         for (AWTEvent event : macro) {
                             simulateEvent(event);
                         }
@@ -1162,17 +1167,18 @@ class Editor extends PComponent {
     }
 
     private boolean handleNormalMode() {
-        if (key == 'v') {
+        if (Character.toLowerCase(key) == 'v') {
             mode = Mode.VISUAL;
             visualEndpoints.clear();
+            motion = "";
+        }
+        if (key == 'v') {
             visualEndpoints.add(cursor.copy().toPVector());
             visualEndpoints.add(cursor.copy().toPVector());
             visualSelectionIndex = 0;
             return true;
         } else if (key == 'V') {
-            mode = Mode.VISUAL;
             cursor.x = cursor.getEndOfLine();
-            visualEndpoints.clear();
             visualEndpoints.add(new PVector(0, cursor.copy().y));
             visualEndpoints.add(cursor.copy().toPVector());
             visualSelectionIndex = 1;
