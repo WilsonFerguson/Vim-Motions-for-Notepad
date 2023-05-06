@@ -629,10 +629,9 @@ class Editor extends PComponent {
 
                     macro.clear();
                     return true;
-                // case default:
-                // return false;
+                default:
+                    return false;
             }
-            return false;
         }
 
         if (mode == Mode.NORMAL) {
@@ -846,10 +845,9 @@ class Editor extends PComponent {
                     if (motion != '@')
                         previousMacro = motion;
                     return true;
-                // case default:
-                // return false;
+                default:
+                    return false;
             }
-            return false;
         }
 
         if (mode == Mode.VISUAL) {
@@ -915,10 +913,9 @@ class Editor extends PComponent {
                 line = line.substring(0, cursor.x) + searchChar + line.substring(cursor.x + 1);
                 content.set(cursor.y, line);
                 return true;
-            // case default:
-            // return false;
+            default:
+                return false;
         }
-        return false;
     }
 
     // dd, 3yy, 2d2d
