@@ -1,5 +1,6 @@
 import java.io.*;
 import java.util.*;
+import java.awt.AWTEvent;
 
 import javax.swing.JFileChooser;
 import javax.swing.UIManager;
@@ -64,10 +65,10 @@ class Editor extends PComponent {
     private char[] commands = { ':', '/', '?', '*' };
 
     // Macros
-    private HashMap<Character, String> macros = new HashMap<>();
+    private HashMap<Character, List<AWTEvent>> macros = new HashMap<>();
     private char previousMacro = ' ';
     private boolean recordingMacro = false;
-    private String macro = "";
+    private List<AWTEvent> macro = new ArrayList<>();
     private char macroKey = ' ';
 
     public Editor(Sketch sketch) {
@@ -622,8 +623,11 @@ class Editor extends PComponent {
                 case 'q':
                     // This case will only happen if they press q and are recording a macro
                     recordingMacro = false;
-                    macros.put(macroKey, macro);
-                    macro = "";
+                    macro.remove(macro.size() - 1); // remove the q
+
+                    macros.put(macroKey, new ArrayList<AWTEvent>(macro));
+
+                    macro.clear();
                     return true;
                 // case default:
                 // return false;
@@ -827,13 +831,15 @@ class Editor extends PComponent {
                     char key = motion;
                     if (motion == '@')
                         key = previousMacro;
-                    String macro = macros.get(key);
+                    List<AWTEvent> macro = macros.get(key);
                     if (macro == null)
                         return true;
 
+                    this.motion = "";
+
                     for (int i = 0; i < numTimes; i++) {
-                        for (int j = 0; j < macro.length(); j++) {
-                            runMotion(macro.charAt(j));
+                        for (AWTEvent event : macro) {
+                            simulateEvent(event);
                         }
                     }
 
@@ -1099,8 +1105,6 @@ class Editor extends PComponent {
         }
 
         motion += key;
-        if (recordingMacro)
-            macro += key;
         if (errorMessage.length() > 0)
             errorMessage = "";
         String initialMotion = String.valueOf(motion);
@@ -1185,6 +1189,10 @@ class Editor extends PComponent {
         if (keysPressed.contains("Ctrl")) {
             handleControlKey();
             return;
+        }
+
+        if (recordingMacro) {
+            macro.add(awtEvent);
         }
 
         switch (mode) {

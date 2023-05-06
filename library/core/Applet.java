@@ -81,6 +81,7 @@ public class Applet extends JPanel implements PConstants, Runnable {
     public String keyString = "";
     public int keyCode = 0;
     public HashSet<String> keysPressed = new HashSet<String>();
+    public AWTEvent awtEvent;
 
     // Shape
     private ArrayList<PVector> points = new ArrayList<PVector>();
@@ -391,20 +392,9 @@ public class Applet extends JPanel implements PConstants, Runnable {
 
     private void handleEvents() {
         while (!eventQueue.isEmpty()) {
-            AWTEvent evt = eventQueue.remove(0);
-            if (evt instanceof MouseEvent) {
-                MouseEvent mouseEvent = (MouseEvent) evt;
-                handleMouseEvent(mouseEvent);
-            } else if (evt instanceof KeyEvent) {
-                KeyEvent keyEvent = (KeyEvent) evt;
-                handleKeyEvent(keyEvent);
-            } else if (evt instanceof WindowEvent) {
-                WindowEvent windowEvent = (WindowEvent) evt;
-                handleWindowEvent(windowEvent);
-            } else if (evt instanceof ComponentEvent) {
-                ComponentEvent componentEvent = (ComponentEvent) evt;
-                handleComponentEvent(componentEvent);
-            }
+            awtEvent = eventQueue.remove(0);
+            PComponent.awtEvent = awtEvent;
+            simulateEvent(awtEvent);
         }
     }
 
@@ -763,6 +753,28 @@ public class Applet extends JPanel implements PConstants, Runnable {
 
     protected void windowResized() {
 
+    }
+
+    public void simulateKeyPress(char key) {
+        KeyEvent event = new KeyEvent(this, KeyEvent.KEY_PRESSED, System.currentTimeMillis(), 0,
+                KeyEvent.getExtendedKeyCodeForChar(key), key);
+        keyPress(event);
+    }
+
+    public void simulateEvent(AWTEvent event) {
+        if (event instanceof MouseEvent) {
+            MouseEvent mouseEvent = (MouseEvent) event;
+            handleMouseEvent(mouseEvent);
+        } else if (event instanceof KeyEvent) {
+            KeyEvent keyEvent = (KeyEvent) event;
+            handleKeyEvent(keyEvent);
+        } else if (event instanceof WindowEvent) {
+            WindowEvent windowEvent = (WindowEvent) event;
+            handleWindowEvent(windowEvent);
+        } else if (event instanceof ComponentEvent) {
+            ComponentEvent componentEvent = (ComponentEvent) event;
+            handleComponentEvent(componentEvent);
+        }
     }
 
     public void setup() {

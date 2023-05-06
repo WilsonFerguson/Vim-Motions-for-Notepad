@@ -1,6 +1,7 @@
 package library.core;
 
 import java.util.*;
+import java.awt.AWTEvent;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class PComponent extends PFunctions {
@@ -35,6 +36,7 @@ public class PComponent extends PFunctions {
     public static String keyString;
     public static int keyCode = 0;
     public static HashSet<String> keysPressed = new HashSet<String>();
+    public static AWTEvent awtEvent;
 
     // FPS
     public static float frameRate = 0;
@@ -73,6 +75,7 @@ public class PComponent extends PFunctions {
         key = applet.key;
         keyString = applet.keyString;
         keyCode = applet.keyCode;
+        awtEvent = applet.awtEvent;
         keysPressed = applet.keysPressed;
 
         frameRate = applet.frameRate;
@@ -131,6 +134,14 @@ public class PComponent extends PFunctions {
 
     protected void windowResized() {
 
+    }
+
+    public void simulateKeyPress(char key) {
+        applet.simulateKeyPress(key);
+    }
+
+    public void simulateEvent(AWTEvent event) {
+        applet.simulateEvent(event);
     }
 
     public void smooth() {
