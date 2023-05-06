@@ -39,9 +39,13 @@ public class color {
 
     /**
      * Values must be enclosed in parentheses. Assumes: __(colors)<br>
-     * <br>"colors" is either 1, 2, 3, or 4 values separated by commas.<br>
-     * <br>Example: color(255, 255) is the same as rgb(255) or rgb(255, 255, 255), etc.<br>
-     * <br>Does not support non-rgb color spaces.
+     * <br>
+     * "colors" is either 1, 2, 3, or 4 values separated by commas.<br>
+     * <br>
+     * Example: color(255, 255) is the same as rgb(255) or rgb(255, 255, 255),
+     * etc.<br>
+     * <br>
+     * Does not support non-rgb color spaces.
      */
     public color(String c) {
         c = c.toLowerCase().trim().replace(" ", "");
@@ -107,23 +111,23 @@ public class color {
         return a;
     }
 
-    public color setRed(int r) {
-        this.r = r;
+    public color setRed(double r) {
+        this.r = (int) r;
         return this;
     }
 
-    public color setGreen(int g) {
-        this.g = g;
+    public color setGreen(double g) {
+        this.g = (int) g;
         return this;
     }
 
-    public color setBlue(int b) {
-        this.b = b;
+    public color setBlue(double b) {
+        this.b = (int) b;
         return this;
     }
 
-    public color setAlpha(int a) {
-        this.a = a;
+    public color setAlpha(double a) {
+        this.a = (int) a;
         return this;
     }
 

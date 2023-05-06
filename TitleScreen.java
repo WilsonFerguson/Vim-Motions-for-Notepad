@@ -74,10 +74,17 @@ public class TitleScreen extends PComponent {
         float x = map(index % 3, 0, 2, xLeft, xRight);
         float y = map(index / 3, 0, 2, yTop, yBottom);
 
+        boolean hovered = mouseX > x - w / 2 && mouseX < x + w / 2 && mouseY > y - h / 2 && mouseY < y + h / 2;
+        if (mousePressed && hovered) {
+            state = recentFiles[index];
+        }
+
         // Draw the outline
         stroke(textColor);
         strokeWeight(1.5);
         noFill();
+        if (hovered)
+            fill(0, 50);
         rect(x, y, w, h, 10);
 
         // Draw the number
