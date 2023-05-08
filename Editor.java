@@ -1322,6 +1322,9 @@ class Editor extends PComponent {
                         break;
                 }
 
+                if (recordingMacro)
+                    modeString += "recording @" + macroKey;
+
                 text(modeString, 5, 0);
             } else
                 text(motion, 5, 0);
