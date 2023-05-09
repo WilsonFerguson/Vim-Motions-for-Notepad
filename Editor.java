@@ -481,10 +481,9 @@ class Editor extends PComponent {
         return false;
     }
 
-    private boolean parseCommandStar(String motion) {
-        // Get the word at the cursor, set motion to "/word", return
-        // parseCommandSlash(motion)
-        // TODO - implement
+    private boolean parseCommandStar() {
+        motion = "/" + cursor.getWord();
+        parseCommandSlash(motion);
         return true;
     }
 
@@ -503,7 +502,7 @@ class Editor extends PComponent {
             case ':':
                 return parseCommandColon(motion);
             case '*':
-                return parseCommandStar(motion);
+                return parseCommandStar();
             case '/':
                 return parseCommandSlash(motion);
         }
@@ -894,7 +893,11 @@ class Editor extends PComponent {
                     mode = Mode.NORMAL;
                     return true;
                 case 'i':
+                    // TODO implement this
+                    return false;
                 case 'a':
+                    // TODO implement this
+                    return false;
                 case 'r':
                     ArrayList<PVector> selectedCharacters = getSelectedCharacters();
                     char searchChar = motion;
@@ -916,6 +919,21 @@ class Editor extends PComponent {
             case 'c':
             case 'd':
             case 'y':
+                this.motion = "";
+                for (int i = 0; i < numTimesTotal; i++) {
+                    simulateKeyPress('v');
+
+                    // Run the movement
+                    runMotion(numTimes, motion);
+                    // hacky!!
+                    if (motion == 'w')
+                        cursor.left();
+                    updateVisualEndpoints();
+
+                    // Run the operator (d, c, y)
+                    runMotion(operator);
+                }
+                return true;
             case 'r':
                 char searchChar = motion;
                 if (numTimes != 1)
@@ -1333,6 +1351,17 @@ class Editor extends PComponent {
         pop();
     }
 
+    private void updateVisualEndpoints() {
+        if (mode != Mode.VISUAL)
+            return;
+
+        // Shouldn't happen, but just to be safe
+        if (visualEndpoints.size() == 0)
+            return;
+
+        visualEndpoints.set(visualSelectionIndex, cursor.toPVector());
+    }
+
     private PVector[] getSortedVisualEndpoints() {
         PVector start = visualEndpoints.get(0).copy();
         PVector end = visualEndpoints.get(1).copy();
@@ -1525,18 +1554,12 @@ class Editor extends PComponent {
         pop();
     }
 
-    private void updateVisualEndpoints() {
-        if (mode != Mode.VISUAL)
-            return;
-
-        // Shouldn't happen, but just to be safe
-        if (visualEndpoints.size() == 0)
-            return;
-
-        visualEndpoints.set(visualSelectionIndex, cursor.toPVector());
-    }
-
     public void draw() {
+        if (content.size() == 0) {
+            content.add("");
+            cursor.constrain();
+        }
+        
         updateViewportOffset();
         background(backgroundColor);
         translate(PVector.mult(viewportOffset, -1)); // -1 cause if the viewport is looking 300 down, we need to move

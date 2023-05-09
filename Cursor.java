@@ -94,10 +94,10 @@ public class Cursor extends PComponent implements EventIgnorer {
     }
 
     public void constrain() {
-        y = max(y, 0);
         y = min(y, content.size() - 1);
-        x = max(x, 0);
+        y = max(y, 0);
         x = min(x, getEndOfLine());
+        x = max(x, 0);
     }
 
     public void findLastNonWhitespace() {
@@ -282,17 +282,8 @@ public class Cursor extends PComponent implements EventIgnorer {
     }
 
     public void deleteCurrentCharacter() {
-        if (!onCharacter() && x != 0)
+        if ((!onCharacter() && x != 0) || x >= content.get(y).length())
             return;
-
-        if (x == 0) {
-            int originalLength = content.get(y - 1).length();
-            content.set(y - 1, content.get(y - 1) + content.get(y));
-            content.remove(y);
-            y--;
-            x = originalLength;
-            return;
-        }
 
         String line = content.get(y);
         content.set(y, line.substring(0, x) + line.substring(x + 1));
@@ -443,7 +434,8 @@ public class Cursor extends PComponent implements EventIgnorer {
     }
 
     public int getEndOfLine() {
-        // return max(content.get(y).length() - 1, 0);
+        if (y >= content.size() || y < 0)
+            return 0; // probably not ideal to return 0 instead of -1, but should avoid errors
         if (editor.getMode() == Mode.INSERT)
             return content.get(y).length();
 
