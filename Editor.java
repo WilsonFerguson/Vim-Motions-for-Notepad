@@ -1120,6 +1120,16 @@ class Editor extends PComponent {
                 return false;
         }
 
+        // If we're an arrow key, change key to respective hjkl
+        if (keyString.equals("Up"))
+            key = 'k';
+        if (keyString.equals("Down"))
+            key = 'j';
+        if (keyString.equals("Left"))
+            key = 'h';
+        if (keyString.equals("Right"))
+            key = 'l';
+
         // If the key isn't a motion, then we're done (length < 1 so that :, f, etc.
         // still works)
         if (!isMotion(key) && !isOperator(key) && !isCommand(key) && motion.length() < 1)
