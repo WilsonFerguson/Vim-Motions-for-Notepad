@@ -1120,8 +1120,9 @@ class Editor extends PComponent {
                 return false;
         }
 
-        // If the key isn't a motion, then we're done
-        if (!isMotion(key) && !isOperator(key) && !isCommand(key))
+        // If the key isn't a motion, then we're done (length < 1 so that :, f, etc.
+        // still works)
+        if (!isMotion(key) && !isOperator(key) && !isCommand(key) && motion.length() < 1)
             return false;
 
         motion += key;
