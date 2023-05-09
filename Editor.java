@@ -1120,6 +1120,10 @@ class Editor extends PComponent {
                 return false;
         }
 
+        // If the key isn't a motion, then we're done
+        if (!isMotion(key) && !isOperator(key))
+            return false;
+
         motion += key;
         if (errorMessage.length() > 0)
             errorMessage = "";
