@@ -929,9 +929,12 @@ class Editor extends PComponent {
 
                     // Run the movement
                     runMotion(numTimes, motion);
-                    // hacky!!
+
+                    // nice hack to get the cursor to the right spot
                     if (motion == 'w')
                         cursor.left();
+                    if (motion == 'b')
+                        cursor.right();
                     updateVisualEndpoints();
 
                     // Run the operator (d, c, y)
