@@ -316,6 +316,10 @@ class Editor extends PComponent {
         return false;
     }
 
+    private boolean isNumber(char c) {
+        return c >= '0' && c <= '9';
+    }
+
     private void saveFile() {
         if (file == null) {
             JFileChooser fileChooser = new JFileChooser();
@@ -1150,7 +1154,7 @@ class Editor extends PComponent {
 
         // If the key isn't a motion, then we're done (length < 1 so that :, f, etc.
         // still works)
-        if (!isMotion(key) && !isOperator(key) && !isCommand(key) && motion.length() < 1)
+        if (!isMotion(key) && !isOperator(key) && !isCommand(key) && !isNumber(key) && motion.length() < 1)
             return false;
 
         motion += key;
@@ -1306,11 +1310,19 @@ class Editor extends PComponent {
         // (mode if not in normal), on right: motion being typed
         String filePath = "[No Name]";
         if (file != null) {
-            filePath = file.getAbsolutePath();
+            // filePath = file.getAbsolutePath();
+            filePath = file.getName(); // I thought vim showed abs path but I just checked again and it doesn't?
 
         }
         if (!fileSaved)
             filePath += " [+]";
+
+        // If the path is too long, truncate it
+        int maxPathLength = (int) (width * 0.73 / textWidth("a"));
+        if (filePath.length() > maxPathLength) {
+            filePath = filePath.substring(filePath.length() - maxPathLength);
+            filePath = "[...]" + filePath;
+        }
 
         fill(backgroundColor);
         rectMode(CORNER);
@@ -1574,7 +1586,7 @@ class Editor extends PComponent {
             content.add("");
             cursor.constrain();
         }
-        
+
         updateViewportOffset();
         background(backgroundColor);
         translate(PVector.mult(viewportOffset, -1)); // -1 cause if the viewport is looking 300 down, we need to move
