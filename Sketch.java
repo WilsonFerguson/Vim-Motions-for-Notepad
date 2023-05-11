@@ -72,6 +72,8 @@ class Sketch extends Applet {
         this.state = state;
         if (state == 0) {
             title = new TitleScreen(false);
+            delete(editor); // dude this took so long to figure out it was in the list multiple times so the
+                            // events were called multiple times
             editor = null;
         } else if (state == 1) {
             editor = new Editor(this);

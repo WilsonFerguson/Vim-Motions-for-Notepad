@@ -659,41 +659,36 @@ class Editor extends PComponent {
                 case 'C':
                     cursor.deleteToLineEnd();
                     mode = Mode.INSERT;
-                    fileSaved = false;
-                    return true;
+                    break;
                 case 'D':
                     cursor.deleteToLineEnd();
-                    fileSaved = false;
-                    return true;
+                    break;
                 case 's':
                     cursor.deleteCurrentCharacter();
                     mode = Mode.INSERT;
-                    fileSaved = false;
-                    return true;
+                    break;
                 case 'p':
                     cursor.pasteAfter();
-                    fileSaved = false;
-                    return true;
+                    break;
                 case 'P':
                     cursor.pasteBefore();
-                    fileSaved = false;
-                    return true;
+                    break;
                 case 'x':
                     cursor.deleteCurrentCharacter();
-                    fileSaved = false;
-                    return true;
+                    break;
                 case 'o':
                     cursor.newLineBelow();
                     mode = Mode.INSERT;
-                    fileSaved = false;
-                    return true;
+                    break;
                 case 'O':
                     cursor.newLineAbove();
                     mode = Mode.INSERT;
-                    fileSaved = false;
-                    return true;
+                    break;
+                default:
+                    return false;
             }
-            return false;
+            fileSaved = false;
+            return true;
         }
 
         // Visual mode
