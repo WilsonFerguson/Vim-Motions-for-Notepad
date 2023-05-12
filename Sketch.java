@@ -34,6 +34,7 @@ class Sketch extends Applet {
             title.draw();
 
             if (editor != null) {
+                delete(editor);
                 editor = null;
             }
 
@@ -50,6 +51,7 @@ class Sketch extends Applet {
                     case "open":
                         editor = new Editor(this);
                         if (!editor.openExplorer()) {
+                            delete(editor);
                             editor = null;
                             title = new TitleScreen(false);
                             return;
@@ -77,6 +79,7 @@ class Sketch extends Applet {
             editor = null;
         } else if (state == 1) {
             editor = new Editor(this);
+            delete(title);
             title = null;
         }
     }
