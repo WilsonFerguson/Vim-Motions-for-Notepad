@@ -1,7 +1,8 @@
 package library.core;
 
 import java.util.*;
-import java.awt.AWTEvent;
+import java.awt.*;
+import javax.swing.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class PComponent extends PFunctions {
@@ -191,6 +192,38 @@ public class PComponent extends PFunctions {
 
     public void displayFrameRate() {
         applet.displayFrameRate();
+    }
+
+    public double getWindowScale() {
+        return applet.getWindowScale();
+    }
+
+    public double getUIScale() {
+        return applet.getUIScale();
+    }
+
+    public PVector getTrueScreenSize() {
+        return applet.getTrueScreenSize();
+    }
+
+    public PVector getScaledScreenSize() {
+        return applet.getScaledScreenSize();
+    }
+
+    public void setResizable(boolean resizable) {
+        applet.setResizable(resizable);
+    }
+
+    public JFrame getFrame() {
+        return applet.getFrame();
+    }
+
+    public Graphics2D getGraphics2D() {
+        return applet.getGraphics2D();
+    }
+
+    public double getUniversalScale() {
+        return applet.getUniversalScale();
     }
 
     public void setTitle(String title) {

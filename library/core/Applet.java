@@ -339,6 +339,10 @@ public class Applet extends JPanel implements PConstants, Runnable {
         return Toolkit.getDefaultToolkit().getScreenResolution() / 96.0;
     }
 
+    public double getUIScale() {
+        return uiScale;
+    }
+
     public PVector getTrueScreenSize() {
         return new PVector(displayWidth, displayHeight);
     }

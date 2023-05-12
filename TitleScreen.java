@@ -229,7 +229,8 @@ public class TitleScreen extends PComponent {
             drawTitleScreen();
 
         // Draw the motion
-        textSize(0.065 * width / 4);
+        textSize(0.065 * width / 4 / getUIScale()); // Divide by UI scale to make sure text isn't scaled up on high DPI
+                                                    // screens
         textAlign(LEFT);
         fill(textColor);
         text(motion, 0, height - textHeight(motion));

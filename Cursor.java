@@ -587,6 +587,11 @@ public class Cursor extends PComponent implements EventIgnorer {
         return new PVector(x, y);
     }
 
+    public void setPVector(PVector pos) {
+        x = (int) pos.x;
+        y = (int) pos.y;
+    }
+
     public void draw(Mode mode) {
         content = editor.getContent();
         clamp(mode);
