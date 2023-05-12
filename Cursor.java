@@ -552,6 +552,10 @@ public class Cursor extends PComponent implements EventIgnorer {
         nextWord();
         if (x == startX)
             x++;
+        // If we are at the end, make to include the last character (cause substring is
+        // exclusive)
+        if (isEndOfLine() && getCharType(x, y) == charType)
+            x++;
 
         String word = content.get(y).substring(startX, (int) toPVector().x);
 
