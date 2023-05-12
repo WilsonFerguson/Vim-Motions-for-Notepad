@@ -374,6 +374,26 @@ public class Cursor extends PComponent implements EventIgnorer {
         x = getEndOfLine();
     }
 
+    public void joinLines() {
+        if (y >= content.size() - 1)
+            return;
+
+        // Get line below
+        String lineBelow = content.get(y + 1);
+        lineBelow = lineBelow.substring(findFirstNonWhitespace(lineBelow));
+
+        // Move cursor to middle of the two joined lines
+        x = findLastNonWhitespace(content.get(y));
+
+        // Join the lines (check to see if current line is empty, if so don't add a
+        // space at the start)
+        if (content.get(y).length() == 0)
+            content.set(y, lineBelow);
+        else
+            content.set(y, content.get(y) + " " + lineBelow);
+        content.remove(y + 1);
+    }
+
     private int findLastNonWhitespace(String line) {
         for (int i = line.length() - 1; i >= 0; i--)
             if (!Character.isWhitespace(line.charAt(i)))

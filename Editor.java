@@ -57,8 +57,8 @@ class Editor extends PComponent {
     private char[] operatorsVisual = { 'y', 'i', 'a', 'r' };
     private char[] operatorsGeneric = { 'f', 'F', 'q', '@' }; // TODO - add g, <, >, z
 
-    private char[] motionsNormal = { 'i', 'a', 'C', 'D', 's', 'p', 'P', 'x', 'o', 'O' };
-    private char[] motionsVisual = { 'c', 'd', 'C', 'D', 's', 'p', 'P', 'x', 'o', 'O' };
+    private char[] motionsNormal = { 'i', 'a', 'C', 'D', 's', 'p', 'P', 'x', 'o', 'O', 'J' };
+    private char[] motionsVisual = { 'c', 'd', 'C', 'D', 's', 'p', 'P', 'x', 'o', 'O', 'J' };
     private char[] motionsGeneric = { 'I', 'A', 'w', 'b', 'W', 'B', 'e', 'E', 'h', 'j', 'k', 'l', '%', '0', '_', '^',
             '$', 'G', '.', 'u', 'q' };
 
@@ -684,6 +684,9 @@ class Editor extends PComponent {
                     cursor.newLineAbove();
                     mode = Mode.INSERT;
                     break;
+                case 'J':
+                    cursor.joinLines();
+                    break;
                 default:
                     return false;
             }
@@ -770,6 +773,12 @@ class Editor extends PComponent {
                 }
                 visualSelectionIndex = visualSelectionIndex == 0 ? 1 : 0;
                 return true;
+            case 'J':
+                PVector start = getSortedVisualEndpoints()[0];
+                cursor.y = (int) start.y;
+                cursor.joinLines();
+                changed = true;
+                break;
         }
         if (changed) {
             if (mode == Mode.VISUAL) {
