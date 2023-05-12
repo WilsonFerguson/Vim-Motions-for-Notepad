@@ -38,7 +38,7 @@ class Editor extends PComponent {
     private boolean relativeLineNumbers = true;
 
     // Properties
-    private color backgroundColor, textColor, currentLineColor, cursorColor, highlightColor, linkColor;
+    private color backgroundColor, textColor, currentLineColor, cursorColor, highlightColor, linkColor, typoColor;
     private int fontSize = 20;
     private String fontFamily = "Arial";
     private int tabSize = 4;
@@ -124,6 +124,7 @@ class Editor extends PComponent {
             cursorColor = color(properties.getProperty("cursorColor"));
             highlightColor = color(properties.getProperty("highlightColor"));
             linkColor = color(properties.getProperty("linkColor"));
+            typoColor = color(properties.getProperty("typoColor"));
 
             fontSize = parseInt(properties.getProperty("fontSize"));
             fontFamily = properties.getProperty("fontFamily");
@@ -1444,11 +1445,12 @@ class Editor extends PComponent {
 
     private float drawSequence(String sequence, float x, float y) {
         String[] words = sequence.split(" ");
-        // ArrayList<String> sequences = new ArrayList<>();
+
         LinkedHashMap<String, Integer> sequences = new LinkedHashMap<>();
         final int URL = 0;
         final int TYPO = 1;
         final int NORMAL = 2;
+
         String currentSequence = "";
         for (int i = 0; i < words.length; i++) {
             String word = words[i];
@@ -1498,13 +1500,13 @@ class Editor extends PComponent {
                 text(s, x, y);
 
                 // Add squiggly underline
-                stroke(linkColor);
+                stroke(typoColor);
                 strokeWeight(1);
                 noFill();
                 beginShape(SMOOTH);
                 float w = textWidth(s);
                 float lineY = y + lineHeight / 2;
-                for (int i = 0; i < w; i += 2) {
+                for (int i = 0; i < w; i++) {
                     vertex(x + i, lineY + sin(i) * 2);
                 }
                 endShape();
