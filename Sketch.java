@@ -42,24 +42,22 @@ class Sketch extends Applet {
                 String titleState = title.getState();
                 switch (titleState) {
                     case "new":
-                        editor = new Editor(this);
+                        createEditor();
                         break;
                     case "new insert":
-                        editor = new Editor(this);
+                        createEditor();
                         editor.mimicKeyPress('i');
                         break;
                     case "open":
                         editor = new Editor(this);
                         if (!editor.openExplorer()) {
-                            delete(editor);
-                            editor = null;
-                            title = new TitleScreen(false);
+                            createTitle();
                             return;
                         }
                         break;
                     default:
                         File file = new File(titleState);
-                        editor = new Editor(this);
+                        createEditor();
                         editor.setFile(file);
                         break;
                 }
@@ -73,15 +71,22 @@ class Sketch extends Applet {
     public void setState(int state) {
         this.state = state;
         if (state == 0) {
-            title = new TitleScreen(false);
-            delete(editor); // dude this took so long to figure out it was in the list multiple times so the
-                            // events were called multiple times
-            editor = null;
+            createTitle();
         } else if (state == 1) {
-            editor = new Editor(this);
-            delete(title);
-            title = null;
+            createEditor();
         }
+    }
+
+    public void createEditor() {
+        editor = new Editor(this);
+        delete(title);
+        title = null;
+    }
+
+    public void createTitle() {
+        title = new TitleScreen(false);
+        delete(editor);
+        editor = null;
     }
 
     public void onExit() {
