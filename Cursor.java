@@ -548,7 +548,9 @@ public class Cursor extends PComponent implements EventIgnorer {
             left();
 
         int startX = x;
-        endOfWord();
+        // Move to the end of the word (unless we are already at the end of the line)
+        if (x < getEndOfLine() && getCharType(x + 1, y) != CharType.SPACE)
+            endOfWord();
 
         String word = content.get(y).substring(startX, (int) toPVector().x + 1);
 
