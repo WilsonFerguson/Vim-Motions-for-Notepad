@@ -71,6 +71,9 @@ class Editor extends PComponent {
     private List<AWTEvent> macro = new ArrayList<>();
     private char macroKey = ' ';
 
+    // Dictionary
+    private ArrayList<String> dictionary;
+
     public Editor(Sketch sketch) {
         this.sketch = sketch;
 
@@ -106,6 +109,8 @@ class Editor extends PComponent {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {
         }
+
+        dictionary = new ArrayList<String>(Arrays.asList(loadStrings("dictionary.txt"))); // awful for performance
     }
 
     private void readProperties() {
@@ -1439,28 +1444,42 @@ class Editor extends PComponent {
 
     private float drawSequence(String sequence, float x, float y) {
         String[] words = sequence.split(" ");
-        ArrayList<String> sequences = new ArrayList<>();
+        // ArrayList<String> sequences = new ArrayList<>();
+        LinkedHashMap<String, Integer> sequences = new LinkedHashMap<>();
+        final int URL = 0;
+        final int TYPO = 1;
+        final int NORMAL = 2;
         String currentSequence = "";
         for (int i = 0; i < words.length; i++) {
             String word = words[i];
             if (isValidURL(word)) {
-                sequences.add(currentSequence);
-                if (i != words.length - 1)
-                    sequences.add(word + " ");
-                else
-                    sequences.add(word);
-                currentSequence = "";
+                sequences.put(currentSequence, NORMAL);
+                sequences.put(word, URL);
+                currentSequence = (i != words.length - 1) ? " " : "";
             } else {
+                // Check if it's a typo
+                String soloWord = word.toLowerCase();
+                // Remove punctuation
+                char[] punctuation = { ',', '.', '!', '?', ':', ';', '\'', '"', '(', ')', '[', ']', '{', '}', '-' };
+                for (char p : punctuation)
+                    soloWord = soloWord.replace(p + "", "");
+                if (!dictionary.contains(soloWord)) {
+                    sequences.put(currentSequence, NORMAL);
+                    sequences.put(word, TYPO);
+                    currentSequence = (i != words.length - 1) ? " " : "";
+                    continue;
+                }
+
                 currentSequence += word;
                 if (i != words.length - 1)
                     currentSequence += " ";
             }
         }
         if (currentSequence.length() > 0)
-            sequences.add(currentSequence);
+            sequences.put(currentSequence, NORMAL);
 
-        for (String s : sequences) {
-            if (isValidURL(s)) {
+        for (String s : sequences.keySet()) {
+            if (sequences.get(s) == URL) {
                 // Draw word
                 fill(linkColor);
                 text(s, x, y);
@@ -1474,6 +1493,24 @@ class Editor extends PComponent {
                 noStroke();
 
                 x += w;
+            } else if (sequences.get(s) == TYPO) {
+                fill(textColor);
+                text(s, x, y);
+
+                // Add squiggly underline
+                stroke(linkColor);
+                strokeWeight(1);
+                noFill();
+                beginShape(SMOOTH);
+                float w = textWidth(s);
+                float lineY = y + lineHeight / 2;
+                for (int i = 0; i < w; i += 2) {
+                    vertex(x + i, lineY + sin(i) * 2);
+                }
+                endShape();
+                noStroke();
+
+                x += textWidth(s);
             } else {
                 fill(textColor);
                 text(s, x, y);
