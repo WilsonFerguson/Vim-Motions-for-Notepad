@@ -318,8 +318,10 @@ public class TitleScreen extends PComponent {
         if (!motion.startsWith("d") || motion.length() < 2)
             return false;
 
-        motion = motion.substring(1);
-        int index = parseInt(motion) - 1;
+        String newMotion = motion.substring(1);
+        if (!Helper.isInt(newMotion))
+            return false;
+        int index = parseInt(newMotion) - 1;
         if (index < 0 || index >= recentFiles.length)
             return false;
 

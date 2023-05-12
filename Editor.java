@@ -64,6 +64,8 @@ class Editor extends PComponent {
 
     private char[] commands = { ':', '/', '?', '*' };
 
+    private char[] validSecondOperators = { 'i', 'a' }; // diw or daw, middle i or a is valid
+
     // Macros
     private HashMap<Character, List<AWTEvent>> macros = new HashMap<>();
     private char previousMacro = ' ';
@@ -173,7 +175,8 @@ class Editor extends PComponent {
 
         historyIndex++;
         // content = new ArrayList<>(history.get(historyIndex));
-        // TODO - make it actually remember the cursor position (it might but other motions aren't saving the correct cursor pos idk)
+        // TODO - make it actually remember the cursor position (it might but other
+        // motions aren't saving the correct cursor pos idk)
         HistoryState historyState = history.get(historyIndex);
         content = new ArrayList<>(historyState.getContent());
         cursor.setContent(content);
@@ -281,6 +284,14 @@ class Editor extends PComponent {
                 if (c == operator)
                     return true;
         }
+
+        return false;
+    }
+
+    private boolean isValidSecondOperator(char c) {
+        for (char operator : validSecondOperators)
+            if (c == operator)
+                return true;
 
         return false;
     }
@@ -954,6 +965,8 @@ class Editor extends PComponent {
             case 'c':
             case 'd':
             case 'y':
+                if (isValidSecondOperator(motion))
+                    return false;
                 this.motion = "";
                 for (int i = 0; i < numTimesTotal; i++) {
                     simulateKeyPress('v');
@@ -1005,10 +1018,20 @@ class Editor extends PComponent {
         return false;
     }
 
-    // ciw, etc.
+    // ciw, diw, daw, etc.
     private boolean runMotion(int numTimesTotal, char mainOperator, int numTimes, char secondOperator, char motion) {
-        // TODO - implement
-        return false;
+        // TODO #14 implement viw, vaw, vib, etc.
+        if (mainOperator == 'v') {
+            // select region
+            return true;
+        }
+
+        // d, c, y, etc.
+        simulateKeyPress('v');
+        this.motion = "v" + this.motion.substring(1);
+        handleMotions();
+        simulateKeyPress(mainOperator);
+        return true;
     }
 
     private void parseMotion() {
@@ -1106,16 +1129,17 @@ class Editor extends PComponent {
 
         char c2 = motion.charAt(0);
         if (isMotion(c2)) {
-            if (runMotion(number, operator, number2, c2))
+            if (runMotion(number, operator, number2, c2)) {
                 this.motion = "";
-            return;
+                return;
+            }
         }
 
         // Structure:
         // (operator). Ex: 3dd, yy
         // (operator)(motion). Ex: ciw
 
-        if (!isOperator(c2))
+        if (!isOperator(c2) && !isValidSecondOperator(c2))
             return;
 
         char operator2 = c2;
