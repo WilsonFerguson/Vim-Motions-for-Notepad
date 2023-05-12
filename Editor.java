@@ -486,6 +486,7 @@ class Editor extends PComponent {
             case "E":
                 openExplorer();
                 return true;
+            // TODO #12 add ability to save newly learned/unlearned words
             case "learn":
                 String word = cursor.getWord().toLowerCase();
                 if (!dictionary.contains(word)) {
