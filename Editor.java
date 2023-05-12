@@ -12,7 +12,7 @@ class Editor extends PComponent {
     private Sketch sketch;
 
     private ArrayList<String> content;
-    private ArrayList<ArrayList<String>> history;
+    private ArrayList<HistoryState> history;
     private int historyIndex = -1; // Will get set to 0 after first history push
 
     private File file;
@@ -79,14 +79,14 @@ class Editor extends PComponent {
 
         content = new ArrayList<>();
         content.add("");
+        cursor = new Cursor(this);
+
         history = new ArrayList<>();
         pushToHistory();
 
         readProperties();
 
         mode = Mode.NORMAL;
-
-        cursor = new Cursor(this);
 
         noStroke();
         textSize(fontSize);
@@ -150,7 +150,8 @@ class Editor extends PComponent {
 
     private void pushToHistory() {
         historyIndex++;
-        history.add(max(historyIndex, 0), new ArrayList<>(content));
+        // history.add(max(historyIndex, 0), new ArrayList<>(content));
+        history.add(max(historyIndex, 0), new HistoryState(content, cursor.toPVector()));
     }
 
     private void undo() {
@@ -158,8 +159,11 @@ class Editor extends PComponent {
             return;
 
         historyIndex--;
-        content = new ArrayList<>(history.get(historyIndex));
+        // content = new ArrayList<>(history.get(historyIndex));
+        HistoryState historyState = history.get(historyIndex);
+        content = new ArrayList<>(historyState.getContent());
         cursor.setContent(content);
+        cursor.setPVector(historyState.getCursorPos());
         cursor.fixOutOfBounds();
     }
 
@@ -168,8 +172,12 @@ class Editor extends PComponent {
             return;
 
         historyIndex++;
-        content = new ArrayList<>(history.get(historyIndex));
+        // content = new ArrayList<>(history.get(historyIndex));
+        // TODO - make it actually remember the cursor position (it might but other motions aren't saving the correct cursor pos idk)
+        HistoryState historyState = history.get(historyIndex);
+        content = new ArrayList<>(historyState.getContent());
         cursor.setContent(content);
+        cursor.setPVector(historyState.getCursorPos());
         cursor.fixOutOfBounds();
     }
 
