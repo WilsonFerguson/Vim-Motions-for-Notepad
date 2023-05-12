@@ -1022,8 +1022,32 @@ class Editor extends PComponent {
     private boolean runMotion(int numTimesTotal, char mainOperator, int numTimes, char secondOperator, char motion) {
         // TODO #14 implement viw, vaw, vib, etc.
         if (mainOperator == 'v') {
-            // select region
-            return true;
+            switch (secondOperator) {
+                case 'i':
+                    switch (motion) {
+                        case 'w':
+                            return true;
+                        case 'b':
+                        case '(':
+                            return true;
+                        case 'B':
+                        case '{':
+                            return true;
+                        case 'p':
+                            return true;
+                        case '<':
+                            return true;
+                        case '\'':
+                            return true;
+                        case '"':
+                            return true;
+                    }
+                    return false;
+                // maybe just do i and then expand the selection if it was an 'a'?
+                case 'a':
+                    return true;
+            }
+            return false;
         }
 
         // d, c, y, etc.
