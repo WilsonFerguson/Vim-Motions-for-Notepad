@@ -145,10 +145,10 @@ public class TitleScreen extends PComponent {
 
         float y = height / 2 + height / 4;
         LinkedHashMap<String, Character> commands = new LinkedHashMap<>();
-        commands.put("New file", 't');
-        commands.put("Open file", 'e');
-        commands.put("Delete file", 'd');
-        commands.put("Remove file", 'r');
+        commands.put("New file", 'T');
+        commands.put("Open file", 'E');
+        commands.put("Delete file", 'D');
+        commands.put("Remove file", 'R');
 
         int i = 0;
         float margin = width / 6;
