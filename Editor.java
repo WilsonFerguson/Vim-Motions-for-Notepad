@@ -486,6 +486,18 @@ class Editor extends PComponent {
             case "E":
                 openExplorer();
                 return true;
+            case "learn":
+                String word = cursor.getWord().toLowerCase();
+                if (!dictionary.contains(word)) {
+                    dictionary.add(word);
+                }
+                return true;
+            case "unlearn":
+                word = cursor.getWord().toLowerCase();
+                if (dictionary.contains(word)) {
+                    dictionary.remove(word);
+                }
+                return true;
         }
 
         return false;

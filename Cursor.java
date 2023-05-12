@@ -243,12 +243,11 @@ public class Cursor extends PComponent implements EventIgnorer {
         // Keep going until I reach a new char type
         CharType type = getCharType(x, y);
         while (isInLine() && getCharType(x, y) == type)
-            // x++;
             right();
 
-        // Go back one
-        // x--;
-        left();
+        // Go back one. Don't only if I'm at the end of the line and on the same type
+        if (!(isEndOfLine() && getCharType(x, y) == type))
+            left();
     }
 
     public void endOfWordWithPunctuation() {
@@ -549,15 +548,9 @@ public class Cursor extends PComponent implements EventIgnorer {
             left();
 
         int startX = x;
-        nextWord();
-        if (x == startX)
-            x++;
-        // If we are at the end, make to include the last character (cause substring is
-        // exclusive)
-        if (isEndOfLine() && getCharType(x, y) == charType)
-            x++;
+        endOfWord();
 
-        String word = content.get(y).substring(startX, (int) toPVector().x);
+        String word = content.get(y).substring(startX, (int) toPVector().x + 1);
 
         x = position.x;
         y = position.y;
