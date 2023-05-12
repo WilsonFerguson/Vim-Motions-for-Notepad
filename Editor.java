@@ -988,9 +988,11 @@ class Editor extends PComponent {
             return false;
 
         this.motion = "";
+        // TODO #13 yy will always move cursor to the end of the line
         for (int i = 0; i < numTimesTotal; i++) {
             simulateKeyPress('V');
-            simulateKeyPress(firstOperator);
+            key = firstOperator;
+            handleMotions();
         }
         return false;
     }
