@@ -135,7 +135,7 @@ public class TitleScreen extends PComponent {
 
     private void drawTitleScreen() {
         background(backgroundColor);
-        textSize(0.065 * width / 4);
+        textSize(0.065 * width / 4 / getUIScale());
 
         fill(textColor);
         rectMode(CENTER);
