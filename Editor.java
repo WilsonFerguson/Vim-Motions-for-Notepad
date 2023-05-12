@@ -827,7 +827,7 @@ class Editor extends PComponent {
                     if (numTimes != 1)
                         searchChar = (char) ((char) numTimes + '0'); // apparently adding two chars returns an int, nice
 
-                    if (cursor.x == content.get(cursor.y).length() - 1)
+                    if (cursor.isEndOfLine())
                         return true; // Return true to clear the motion
                     String contentToSearch = content.get(cursor.y).substring(cursor.x + 1);
                     int index = contentToSearch.indexOf(searchChar);

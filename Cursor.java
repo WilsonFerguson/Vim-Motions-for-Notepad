@@ -449,7 +449,7 @@ public class Cursor extends PComponent implements EventIgnorer {
         return c == '(' || c == '[' || c == '{' || c == '<';
     }
 
-    private boolean isEndOfLine() {
+    public boolean isEndOfLine() {
         if (content.get(y).length() == 0)
             return true;
         return x == getEndOfLine();
