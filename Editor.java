@@ -31,7 +31,7 @@ class Editor extends PComponent {
     private int lastBlink;
 
     // Visual mode
-    private List<PVector> visualEndpoints = new ArrayList<>();
+    private ArrayList<PVector> visualEndpoints = new ArrayList<>();
     private int visualSelectionIndex = 0;
 
     private boolean showLineNumbers = true;
