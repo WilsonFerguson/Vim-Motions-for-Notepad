@@ -243,10 +243,12 @@ public class Cursor extends PComponent implements EventIgnorer {
         // Keep going until I reach a new char type
         CharType type = getCharType(x, y);
         while (isInLine() && getCharType(x, y) == type)
-            x++;
+            // x++;
+            right();
 
         // Go back one
-        x--;
+        // x--;
+        left();
     }
 
     public void endOfWordWithPunctuation() {
@@ -310,7 +312,9 @@ public class Cursor extends PComponent implements EventIgnorer {
 
     public void findMatchingBracket() {
         BracketType bracketType = getBracketType(x, y);
-        char bracketChar = content.get(y).charAt(x);
+        char bracketChar = getCurrentChar();
+        if (bracketChar == Character.MIN_VALUE)
+            return;
         int bracketCount = isOpeningBracket(bracketChar) ? 1 : -1;
 
         int initialX = x;
@@ -410,9 +414,9 @@ public class Cursor extends PComponent implements EventIgnorer {
     }
 
     private CharType getCharType(int x, int y) {
-        if (y >= content.size() || y < 0 || x >= content.get(y).length() || x < 0)
+        if (y >= content.size() || y < 0 || x >= content.get(y).length() || x < 0 || !onCharacter())
             return null;
-        char c = content.get(y).charAt(x);
+        char c = getChar(x, y);
 
         if (Character.isLetter(c))
             return CharType.LETTER;
@@ -425,7 +429,9 @@ public class Cursor extends PComponent implements EventIgnorer {
     }
 
     private BracketType getBracketType(int x, int y) {
-        char c = content.get(y).charAt(x);
+        if (!onCharacter())
+            return BracketType.NONE;
+        char c = getCurrentChar();
 
         if (c == '(' || c == ')')
             return BracketType.PARENTHESIS;
@@ -477,6 +483,18 @@ public class Cursor extends PComponent implements EventIgnorer {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    private char getChar(int x, int y) {
+        try {
+            return content.get(y).charAt(x);
+        } catch (Exception e) {
+            return Character.MIN_VALUE;
+        }
+    }
+
+    public char getCurrentChar() {
+        return getChar(x, y);
     }
 
     public boolean toRightOf(Cursor other) {
