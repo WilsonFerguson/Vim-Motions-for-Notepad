@@ -521,16 +521,19 @@ class Editor extends PComponent {
                 String word = cursor.getWord().toLowerCase();
                 if (!dictionary.contains(word)) {
                     dictionary.add(word);
+                    errorMessage = "Added \"" + word + "\" to dictionary";
                 }
                 return true;
             case "unlearn":
                 word = cursor.getWord().toLowerCase();
                 if (dictionary.contains(word)) {
                     dictionary.remove(word);
+                    errorMessage = "Removed \"" + word + "\" from dictionary";
                 }
                 return true;
             case "spellcheck":
                 spellCheckEnabled = !spellCheckEnabled;
+                errorMessage = "Spell check now " + (spellCheckEnabled ? "enabled" : "disabled");
                 return true;
         }
 
