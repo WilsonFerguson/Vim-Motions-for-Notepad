@@ -2,10 +2,6 @@ import java.util.*;
 import library.core.*;
 
 public class Cursor extends PComponent implements EventIgnorer {
-    private enum CharType {
-        LETTER, PUNCTUATION, SPACE, NUMBER
-    }
-
     private enum BracketType {
         CURLY, SQUARE, PARENTHESIS, TAG, NONE
     }
@@ -282,6 +278,73 @@ public class Cursor extends PComponent implements EventIgnorer {
         x--;
     }
 
+    /**
+     * Moves the cursor to the start of the current range it's in. <br>
+     * <br>
+     * For example:<br>
+     * <br>
+     * if (cursor in here) {<br>
+     * <br>
+     * running this function with the arg '(' would move the cursor to the "("
+     */
+    public void startOfRange(char openingBracket) {
+        PVector startingPos = toPVector();
+
+        char closingBracket = getMatchingBracket(openingBracket);
+        int brackets = -1; // -1 for closing, 1 for opening, stop when 0 && on opening bracket
+        // Start at -1 so that when we find the opening bracket, we're at 0
+        // very dangerous
+        while (true) {
+            char currentChar = getCurrentChar();
+            if (currentChar == openingBracket)
+                brackets++;
+            else if (currentChar == closingBracket && !toPVector().equals(startingPos)) // don't count the starting
+                                                                                        // closing bracket
+                brackets--;
+
+            if (brackets == 0 && currentChar == openingBracket)
+                return;
+
+            PVector previousPos = toPVector();
+            left();
+            // At the start of the file, didn't find it
+            if (previousPos.equals(toPVector())) {
+                setPVector(startingPos);
+                return;
+            }
+        }
+    }
+
+    /**
+     * Moves to the start of the next range.
+     */
+    public void nextRange(char openingBracket) {
+        PVector startingPos = toPVector();
+        while (!isEndOfContent()) {
+            char currentChar = getCurrentChar();
+            if (currentChar == openingBracket) {
+                return;
+            }
+
+            right();
+        }
+
+        // Didn't find, go back to where we started
+        setPVector(startingPos);
+    }
+
+    public void startOfCurrentWord() {
+        CharType charType = getCharType(x, y);
+        while (x > 0 && getCharType(x - 1, y) == charType)
+            left();
+    }
+
+    public void endOfCurrentWord() {
+        CharType charType = getCharType(x, y);
+        while (x < getEndOfLine() && getCharType(x + 1, y) == charType)
+            right();
+    }
+
     public void deleteCurrentCharacter() {
         if ((!onCharacter() && x != 0) || x >= content.get(y).length())
             return;
@@ -314,7 +377,8 @@ public class Cursor extends PComponent implements EventIgnorer {
         char bracketChar = getCurrentChar();
         if (bracketChar == Character.MIN_VALUE)
             return;
-        int bracketCount = isOpeningBracket(bracketChar) ? 1 : -1;
+        boolean isOpeningBracket = isOpeningBracket(bracketChar);
+        int bracketCount = isOpeningBracket ? 1 : -1;
 
         int initialX = x;
         int initialY = y;
@@ -322,9 +386,9 @@ public class Cursor extends PComponent implements EventIgnorer {
         while (bracketCount != 0) {
             BracketType currentBracketType = getBracketType(x, y);
             if (currentBracketType == bracketType) {
-                if (firstRound)
+                if (firstRound) {
                     firstRound = false;
-                else {
+                } else {
                     if (isOpeningBracket(content.get(y).charAt(x)))
                         bracketCount++;
                     else
@@ -332,12 +396,13 @@ public class Cursor extends PComponent implements EventIgnorer {
                 }
             }
 
+            // We found the matching bracket
             if (bracketCount == 0)
                 return;
 
             int previousX = x;
             int previousY = y;
-            if (isOpeningBracket(bracketChar))
+            if (isOpeningBracket)
                 right();
             else
                 left();
@@ -412,7 +477,7 @@ public class Cursor extends PComponent implements EventIgnorer {
         return 0;
     }
 
-    private CharType getCharType(int x, int y) {
+    public CharType getCharType(int x, int y) {
         if (y >= content.size() || y < 0 || x >= content.get(y).length() || x < 0 || !onCharacter())
             return null;
         char c = getChar(x, y);
@@ -446,6 +511,29 @@ public class Cursor extends PComponent implements EventIgnorer {
 
     private boolean isOpeningBracket(char c) {
         return c == '(' || c == '[' || c == '{' || c == '<';
+    }
+
+    private char getMatchingBracket(char c) {
+        switch (c) {
+            case '(':
+                return ')';
+            case ')':
+                return '(';
+            case '[':
+                return ']';
+            case ']':
+                return '[';
+            case '{':
+                return '}';
+            case '}':
+                return '{';
+            case '<':
+                return '>';
+            case '>':
+                return '<';
+            default:
+                return Character.MIN_VALUE;
+        }
     }
 
     public boolean isEndOfLine() {
@@ -543,9 +631,7 @@ public class Cursor extends PComponent implements EventIgnorer {
 
         Cursor position = copy();
 
-        // Move to the start of the word
-        while (x > 0 && getCharType(x - 1, y) == charType)
-            left();
+        startOfCurrentWord();
 
         int startX = x;
         // Move to the end of the word (unless we are already at the end of the line)

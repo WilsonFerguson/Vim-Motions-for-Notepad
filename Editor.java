@@ -58,13 +58,15 @@ class Editor extends PComponent {
     private char[] operatorsGeneric = { 'f', 'F', 'q', '@' }; // TODO - add g, <, >, z
 
     private char[] motionsNormal = { 'i', 'a', 'C', 'D', 's', 'p', 'P', 'x', 'o', 'O', 'J' };
-    private char[] motionsVisual = { 'c', 'd', 'C', 'D', 's', 'p', 'P', 'x', 'o', 'O', 'J' };
+    private char[] motionsVisual = { 'c', 'd', 'C', 'D', 's', 'p', 'P', 'x', 'o', 'O', 'J', 'v' };
     private char[] motionsGeneric = { 'I', 'A', 'w', 'b', 'W', 'B', 'e', 'E', 'h', 'j', 'k', 'l', '%', '0', '_', '^',
             '$', 'G', '.', 'u', 'q' };
 
     private char[] commands = { ':', '/', '?', '*' };
 
     private char[] validSecondOperators = { 'i', 'a' }; // diw or daw, middle i or a is valid
+    // TODO #15 add support for ' and " for motions like vi{ etc.
+    private char[] validRangeOperators = { '(', ')', '[', ']', '{', '}', '<', '>' }; // va{ etc.
 
     // Macros
     private HashMap<Character, List<AWTEvent>> macros = new HashMap<>();
@@ -75,6 +77,7 @@ class Editor extends PComponent {
 
     // Dictionary
     private ArrayList<String> dictionary;
+    private boolean spellCheckEnabled = true;
 
     public Editor(Sketch sketch) {
         this.sketch = sketch;
@@ -333,6 +336,14 @@ class Editor extends PComponent {
         return false;
     }
 
+    private boolean isRangeOperator(char c) {
+        for (char operator : validRangeOperators)
+            if (c == operator)
+                return true;
+
+        return false;
+    }
+
     private boolean isCommand(char c) {
         for (int i = 0; i < commands.length; i++)
             if (c == commands[i])
@@ -517,6 +528,9 @@ class Editor extends PComponent {
                 if (dictionary.contains(word)) {
                     dictionary.remove(word);
                 }
+                return true;
+            case "spellcheck":
+                spellCheckEnabled = !spellCheckEnabled;
                 return true;
         }
 
@@ -817,6 +831,10 @@ class Editor extends PComponent {
                 cursor.joinLines();
                 changed = true;
                 break;
+            case 'v':
+                mode = Mode.NORMAL;
+                visualEndpoints.clear();
+                return true;
         }
         if (changed) {
             if (mode == Mode.VISUAL) {
@@ -938,11 +956,54 @@ class Editor extends PComponent {
                     copyToClipboard(text);
                     mode = Mode.NORMAL;
                     return true;
+                // viw etc.
                 case 'i':
-                    // TODO implement this
+                    if (handleBracketRange('i', motion))
+                        return true;
+
+                    switch (motion) {
+                        case 'w':
+                            visualEndpoints.clear();
+                            cursor.startOfCurrentWord();
+                            enterVisualMode();
+                            cursor.endOfCurrentWord();
+                            return true;
+                        // TODO implement "vip"
+                        case 'p':
+                            return true;
+                    }
                     return false;
                 case 'a':
-                    // TODO implement this
+                    if (handleBracketRange('a', motion))
+                        return true;
+
+                    switch (motion) {
+                        case 'w':
+                            // Ideally we would delete the space to the right, but if that doesn't exist,
+                            // delete the space to the left
+                            cursor.endOfCurrentWord();
+                            boolean deleteRightSpace = true;
+                            if (!cursor.isEndOfLine() && content.get(cursor.y).charAt(cursor.x + 1) != ' ')
+                                deleteRightSpace = false;
+
+                            visualEndpoints.clear();
+                            cursor.startOfCurrentWord();
+                            if (!deleteRightSpace && cursor.x > 0) // > 0 to not go to the previous line
+                                cursor.left();
+
+                            enterVisualMode();
+                            if (!deleteRightSpace && cursor.x > 0)
+                                cursor.right(); // Go back to the start of the word
+
+                            cursor.endOfCurrentWord();
+                            if (deleteRightSpace && !cursor.isEndOfLine())
+                                cursor.right();
+
+                            return true;
+                        // TODO implement "vap"
+                        case 'p':
+                            return true;
+                    }
                     return false;
                 case 'r':
                     ArrayList<PVector> selectedCharacters = getSelectedCharacters();
@@ -1002,6 +1063,89 @@ class Editor extends PComponent {
         }
     }
 
+    private void selectInnerRange() {
+        visualEndpoints.clear();
+        // Select the range
+        PVector startOfRange = cursor.toPVector(); // Save this to go back to later
+        cursor.findMatchingBracket();
+        cursor.left(); // Don't include the bracket
+        PVector endOfRange = cursor.toPVector();
+
+        cursor.setPVector(startOfRange);
+        cursor.right(); // Don't include the bracket
+        enterVisualMode();
+        cursor.setPVector(endOfRange);
+    }
+
+    private void selectOuterRange() {
+        visualEndpoints.clear();
+        enterVisualMode();
+
+        // This is fine to do as we want to include the brackets
+        cursor.findMatchingBracket();
+    }
+
+    private char openingBracket(char c) {
+        switch (c) {
+            case '(':
+                return '(';
+            case ')':
+                return '(';
+            case '{':
+                return '{';
+            case '}':
+                return '{';
+            case '<':
+                return '<';
+            case '>':
+                return '<';
+            case '[':
+                return '[';
+            case ']':
+                return '[';
+            case '\'':
+                return '\'';
+            case '"':
+                return '"';
+            default:
+                return Character.MIN_VALUE;
+        }
+    }
+
+    private boolean handleBracketRange(char rangeType, char motion) {
+        // Aliases for other motions
+        if (motion == 'b')
+            motion = '(';
+        if (motion == 'B')
+            motion = '{';
+        // Check for any range
+        if (isRangeOperator(motion)) {
+            motion = openingBracket(motion);
+            if (motion == Character.MIN_VALUE)
+                return true; // true to clear the motion
+
+            PVector previousPosition = cursor.toPVector();
+
+            cursor.startOfRange(motion);
+            if (cursor.toPVector().equals(previousPosition) && cursor.getCurrentChar() != motion) {
+                // Meaning we aren't in the middle of a range nor the start of a range
+                // Find the next range
+                cursor.nextRange(motion);
+            }
+            if (cursor.toPVector().equals(previousPosition) && cursor.getCurrentChar() != motion)
+                return true; // Didn't find a range
+
+            // selectInnerRange();
+            if (rangeType == 'i')
+                selectInnerRange();
+            else
+                selectOuterRange();
+            return true;
+        }
+
+        return false;
+    }
+
     // dd, 3yy, 2d2d
     private boolean runOperator(int numTimesTotal, char firstOperator, int numTimes, char secondOperator) {
         // Operators must be the same
@@ -1020,41 +1164,17 @@ class Editor extends PComponent {
 
     // ciw, diw, daw, etc.
     private boolean runMotion(int numTimesTotal, char mainOperator, int numTimes, char secondOperator, char motion) {
-        // TODO #14 implement viw, vaw, vib, etc.
-        if (mainOperator == 'v') {
-            switch (secondOperator) {
-                case 'i':
-                    switch (motion) {
-                        case 'w':
-                            return true;
-                        case 'b':
-                        case '(':
-                            return true;
-                        case 'B':
-                        case '{':
-                            return true;
-                        case 'p':
-                            return true;
-                        case '<':
-                            return true;
-                        case '\'':
-                            return true;
-                        case '"':
-                            return true;
-                    }
-                    return false;
-                // maybe just do i and then expand the selection if it was an 'a'?
-                case 'a':
-                    return true;
-            }
-            return false;
-        }
-
-        // d, c, y, etc.
+        // Run viw etc. command
         simulateKeyPress('v');
-        this.motion = "v" + this.motion.substring(1);
+        this.motion = secondOperator + "" + motion;
         handleMotions();
-        simulateKeyPress(mainOperator);
+        updateVisualEndpoints();
+
+        // Run the main operator (d, c, y)
+        this.motion = "";
+        key = mainOperator;
+        handleMotions();
+
         return true;
     }
 
@@ -1152,7 +1272,7 @@ class Editor extends PComponent {
         }
 
         char c2 = motion.charAt(0);
-        if (isMotion(c2)) {
+        if (isMotion(c2) || isRangeOperator(c2)) { // range operator for vi{ stuff
             if (runMotion(number, operator, number2, c2)) {
                 this.motion = "";
                 return;
@@ -1287,16 +1407,26 @@ class Editor extends PComponent {
         }
     }
 
+    private void enterVisualMode() {
+        mode = Mode.VISUAL;
+        visualEndpoints.clear();
+        visualEndpoints.add(cursor.copy().toPVector());
+        visualEndpoints.add(cursor.copy().toPVector());
+        visualSelectionIndex = 0;
+    }
+
     private boolean handleNormalMode() {
+        // Generic v press to go into visual mode
         if (Character.toLowerCase(key) == 'v') {
             mode = Mode.VISUAL;
             visualEndpoints.clear();
             motion = "";
         }
+
+        // 'v' vs 'V'
         if (key == 'v') {
-            visualEndpoints.add(cursor.copy().toPVector());
-            visualEndpoints.add(cursor.copy().toPVector());
-            visualSelectionIndex = 0;
+            // TODO dupe code (mode && clear)
+            enterVisualMode();
             return true;
         } else if (key == 'V') {
             cursor.x = cursor.getEndOfLine();
@@ -1530,19 +1660,21 @@ class Editor extends PComponent {
                 sequences.put(word, URL);
                 currentSequence = (i != words.length - 1) ? " " : "";
             } else {
-                // Check if it's a typo
-                String soloWord = word.toLowerCase();
-                // Remove punctuation
-                char[] punctuation = { ',', '.', '!', '?', ':', ';', '\'', '"', '(', ')', '[', ']', '{', '}', '-',
-                        '_' };
-                for (char p : punctuation)
-                    soloWord = soloWord.replace(p + "", "");
+                if (spellCheckEnabled) {
+                    // Check if it's a typo
+                    String soloWord = word.toLowerCase();
+                    // Remove punctuation
+                    char[] punctuation = { ',', '.', '!', '?', ':', ';', '\'', '"', '(', ')', '[', ']', '{', '}', '-',
+                            '_' };
+                    for (char p : punctuation)
+                        soloWord = soloWord.replace(p + "", "");
 
-                if (!dictionary.contains(soloWord) && !soloWord.equals("")) {
-                    sequences.put(currentSequence, NORMAL);
-                    sequences.put(word, TYPO);
-                    currentSequence = (i != words.length - 1) ? " " : "";
-                    continue;
+                    if (!dictionary.contains(soloWord) && !soloWord.equals("")) {
+                        sequences.put(currentSequence, NORMAL);
+                        sequences.put(word, TYPO);
+                        currentSequence = (i != words.length - 1) ? " " : "";
+                        continue;
+                    }
                 }
 
                 currentSequence += word;
