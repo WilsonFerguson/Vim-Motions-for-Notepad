@@ -472,6 +472,14 @@ class Editor extends PComponent {
     }
 
     private boolean parseCommandColon(String motion) {
+        // :50 to go to line 50
+        if (Helper.isInt(motion)) {
+            cursor.y = parseInt(motion) - 1;
+            cursor.x = 0;
+            cursor.constrain();
+            return true;
+        }
+
         switch (motion) {
             case "w":
                 saveFile();
