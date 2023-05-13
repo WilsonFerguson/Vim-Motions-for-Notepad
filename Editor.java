@@ -54,11 +54,11 @@ class Editor extends PComponent {
     private String previousMotion = "";
 
     private char[] operatorsNormal = { 'c', 'd', 'y', 'r' };
-    private char[] operatorsVisual = { 'y', 'i', 'a', 'r' };
-    private char[] operatorsGeneric = { 'f', 'F', 'q', '@' }; // TODO - add g, <, >, z
+    private char[] operatorsVisual = { 'i', 'a', 'r' };
+    private char[] operatorsGeneric = { 'f', 'F', 'q', '@', 'g' }; // TODO - add g, <, >, z
 
     private char[] motionsNormal = { 'i', 'a', 'C', 'D', 's', 'p', 'P', 'x', 'o', 'O', 'J' };
-    private char[] motionsVisual = { 'c', 'd', 'C', 'D', 's', 'p', 'P', 'x', 'o', 'O', 'J', 'v' };
+    private char[] motionsVisual = { 'c', 'd', 'C', 'D', 's', 'p', 'P', 'x', 'o', 'O', 'J', 'v', 'y' };
     private char[] motionsGeneric = { 'I', 'A', 'w', 'b', 'W', 'B', 'e', 'E', 'h', 'j', 'k', 'l', '%', '0', '_', '^',
             '$', 'G', '.', 'u', 'q' };
 
@@ -835,6 +835,32 @@ class Editor extends PComponent {
                 mode = Mode.NORMAL;
                 visualEndpoints.clear();
                 return true;
+            case 'y':
+                ArrayList<Integer> lines = getSelectedCharactersLines();
+                String[] linesArray = new String[lines.size()];
+                PVector[] endpoints = getSortedVisualEndpoints();
+                start = endpoints[0];
+                PVector end = endpoints[1];
+
+                for (int i = 0; i < lines.size(); i++) {
+                    String line = content.get(lines.get(i));
+                    // Cut line off at end points
+                    if (lines.get(i) == start.y) {
+                        line = line.substring((int) start.x);
+                    }
+                    if (lines.get(i) == end.y) {
+                        int endX = (int) end.x;
+                        if (start.y == end.y)
+                            endX -= (int) start.x;
+                        line = line.substring(0, endX + 1);
+                    }
+
+                    linesArray[i] = line + "\n";
+                }
+                String text = String.join("", linesArray);
+                copyToClipboard(text);
+                mode = Mode.NORMAL;
+                return true;
         }
         if (changed) {
             if (mode == Mode.VISUAL) {
@@ -923,6 +949,15 @@ class Editor extends PComponent {
                     if (motion != '@')
                         previousMacro = motion;
                     return true;
+                case 'g':
+                    switch (motion) {
+                        case 'g':
+                            cursor.y = numTimesTotal - 1;
+                            cursor.x = 0;
+                            cursor.constrain();
+                            return true;
+                    }
+                    return true;
                 default:
                     return false;
             }
@@ -930,32 +965,6 @@ class Editor extends PComponent {
 
         if (mode == Mode.VISUAL) {
             switch (operator) {
-                case 'y':
-                    ArrayList<Integer> lines = getSelectedCharactersLines();
-                    String[] linesArray = new String[lines.size()];
-                    PVector[] endpoints = getSortedVisualEndpoints();
-                    PVector start = endpoints[0];
-                    PVector end = endpoints[1];
-
-                    for (int i = 0; i < lines.size(); i++) {
-                        String line = content.get(lines.get(i));
-                        // Cut line off at end points
-                        if (lines.get(i) == start.y) {
-                            line = line.substring((int) start.x);
-                        }
-                        if (lines.get(i) == end.y) {
-                            int endX = (int) end.x;
-                            if (start.y == end.y)
-                                endX -= (int) start.x;
-                            line = line.substring(0, endX + 1);
-                        }
-
-                        linesArray[i] = line + "\n";
-                    }
-                    String text = String.join("", linesArray);
-                    copyToClipboard(text);
-                    mode = Mode.NORMAL;
-                    return true;
                 // viw etc.
                 case 'i':
                     if (handleBracketRange('i', motion))
@@ -1272,11 +1281,9 @@ class Editor extends PComponent {
         }
 
         char c2 = motion.charAt(0);
-        if (isMotion(c2) || isRangeOperator(c2)) { // range operator for vi{ stuff
-            if (runMotion(number, operator, number2, c2)) {
-                this.motion = "";
-                return;
-            }
+        if (runMotion(number, operator, number2, c2)) {
+            this.motion = "";
+            return;
         }
 
         // Structure:
