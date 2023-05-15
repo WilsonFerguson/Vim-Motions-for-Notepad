@@ -1686,10 +1686,11 @@ class Editor extends PComponent {
                     // Check if it's a typo
                     String soloWord = word.toLowerCase();
                     // Remove punctuation
-                    char[] punctuation = { ',', '.', '!', '?', ':', ';', '\'', '"', '(', ')', '[', ']', '{', '}', '-',
-                            '_' };
-                    for (char p : punctuation)
-                        soloWord = soloWord.replace(p + "", "");
+                    char[] ignoredCharacters = { ',', '.', '!', '?', ':', ';', '\'', '"', '(', ')', '[', ']', '{', '}',
+                            '-',
+                            '_', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0' };
+                    for (char c : ignoredCharacters)
+                        soloWord = soloWord.replace(c + "", "");
 
                     if (!dictionary.contains(soloWord) && !soloWord.equals("")) {
                         sequences.put(currentSequence, NORMAL);
