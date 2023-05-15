@@ -24,6 +24,7 @@ class Editor extends PComponent {
     // Viewport
     private PVector defaultViewportOffset;
     private PVector viewportOffset;
+    private float lineNumberMargin = 0;
 
     // Cursor
     private Cursor cursor;
@@ -39,7 +40,7 @@ class Editor extends PComponent {
 
     // Properties
     private color backgroundColor, textColor, currentLineColor, cursorColor, highlightColor, linkColor, typoColor;
-    private int fontSize = 20;
+    private float fontSize = 20;
     private String fontFamily = "Arial";
     private int tabSize = 4;
 
@@ -105,7 +106,7 @@ class Editor extends PComponent {
 
         defaultViewportOffset = PVector.zero();
         if (showLineNumbers)
-            defaultViewportOffset.x = -textWidth("000 ");
+            lineNumberMargin = textWidth("000 ");
 
         viewportOffset = defaultViewportOffset.copy();
 
@@ -1406,14 +1407,17 @@ class Editor extends PComponent {
                 break;
             case "Equals":
                 fontSize *= 1.1;
+                println(fontSize);
                 textSize(fontSize);
                 lineHeight = textAscent() + textDescent();
+                lineNumberMargin = textWidth("000 ");
                 bottomMargin = lineHeight * 2;
                 break;
             case "Minus":
                 fontSize /= 1.1;
                 textSize(fontSize);
                 lineHeight = textAscent() + textDescent();
+                lineNumberMargin = textWidth("000 ");
                 bottomMargin = lineHeight * 2;
                 break;
             case "R":
@@ -1807,7 +1811,7 @@ class Editor extends PComponent {
         brightness *= 0.7;
 
         push();
-        translate(viewportOffset.x, 0);
+        translate(-lineNumberMargin, 0);
 
         for (int i = 0; i < content.size(); i++) {
             // If above the viewport, skip it
@@ -1860,6 +1864,7 @@ class Editor extends PComponent {
         background(backgroundColor);
         translate(PVector.mult(viewportOffset, -1)); // -1 cause if the viewport is looking 300 down, we need to move
                                                      // the content up 300
+        translate(lineNumberMargin, 0);
         updateVisualEndpoints();
 
         drawLineNumbers();
