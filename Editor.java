@@ -1843,7 +1843,7 @@ class Editor extends PComponent {
             } else {
                 fill(color.fromHSB(hue(textColor), saturation(textColor), brightness));
                 textAlign(RIGHT);
-                text(lineNumber, -viewportOffset.x - 4, lineHeight / 2);
+                text(lineNumber, lineNumberMargin - 4, lineHeight / 2);
             }
 
             translate(0, lineHeight);
