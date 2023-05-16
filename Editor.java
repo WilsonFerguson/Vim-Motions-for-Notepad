@@ -41,10 +41,15 @@ class Editor extends PComponent {
     // Properties
     private color backgroundColor, textColor, currentLineColor, cursorColor, highlightColor, linkColor, typoColor;
     private float fontSize = 20;
+    private float zoomAmount = 1;
     private String fontFamily = "Arial";
     private int tabSize = 4;
 
     private float lineHeight;
+
+    // Font Resizing Info Text in the Top Right Corner
+    private int lastZoomChange = 0;
+    private int zoomChangeDuration = 700;
 
     // Bottom information section
     private float bottomMargin;
@@ -103,6 +108,7 @@ class Editor extends PComponent {
         bottomMargin = lineHeight * 2;
 
         lastBlink = millis();
+        lastZoomChange = millis() - zoomChangeDuration; // Minus so that it doesn't display at the start
 
         defaultViewportOffset = PVector.zero();
         if (showLineNumbers)
@@ -1407,18 +1413,11 @@ class Editor extends PComponent {
                 break;
             case "Equals":
                 fontSize *= 1.1;
-                println(fontSize);
-                textSize(fontSize);
-                lineHeight = textAscent() + textDescent();
-                lineNumberMargin = textWidth("000 ");
-                bottomMargin = lineHeight * 2;
+                zoomAmount *= 1.1;
                 break;
             case "Minus":
                 fontSize /= 1.1;
-                textSize(fontSize);
-                lineHeight = textAscent() + textDescent();
-                lineNumberMargin = textWidth("000 ");
-                bottomMargin = lineHeight * 2;
+                zoomAmount /= 1.1;
                 break;
             case "R":
                 redo();
@@ -1426,6 +1425,15 @@ class Editor extends PComponent {
             case "Backspace":
                 // TODO implement this
                 break;
+        }
+
+        // Kind of ugly but saves repetitive code
+        if (keyString.equals("Equals") || keyString.equals("Minus")) {
+            textSize(fontSize);
+            lastZoomChange = millis();
+            lineHeight = textAscent() + textDescent();
+            lineNumberMargin = textWidth("000 ");
+            bottomMargin = lineHeight * 2;
         }
     }
 
@@ -1855,6 +1863,31 @@ class Editor extends PComponent {
         pop();
     }
 
+    public void drawZoomIndicator() {
+        if (millis() - lastZoomChange > zoomChangeDuration)
+            return;
+
+        push();
+        resetTranslation();
+        textSize(20);
+        String zoom = parseInt(zoomAmount * 100) + "%";
+        float zoomTextWidth = textWidth(zoom);
+        float zoomTextHeight = textAscent() + textDescent();
+
+        translate(width - 25 - zoomTextWidth, 5);
+
+        rectMode(CORNER);
+        stroke(255);
+        strokeWeight(1.5);
+        fill(0, 0, 0, 50);
+        rect(0, 0, zoomTextWidth + 20, zoomTextHeight + 5, 7);
+
+        noStroke();
+        fill(255);
+        text(zoom, 10, zoomTextHeight / 2 + 4);
+        pop();
+    }
+
     public void draw() {
         if (content.size() == 0) {
             content.add("");
@@ -1878,5 +1911,6 @@ class Editor extends PComponent {
 
         drawContent();
         drawInformationSection();
+        drawZoomIndicator();
     }
 }
