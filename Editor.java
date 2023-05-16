@@ -1053,7 +1053,7 @@ class Editor extends PComponent {
             case 'c':
             case 'd':
             case 'y':
-                if (isValidSecondOperator(motion) || operator == motion)
+                if (isValidSecondOperator(motion) || isOperator(motion))
                     return false;
                 this.motion = "";
                 for (int i = 0; i < numTimesTotal; i++) {
